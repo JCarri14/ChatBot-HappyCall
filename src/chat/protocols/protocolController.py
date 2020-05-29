@@ -15,14 +15,13 @@ class ProtocolController:
         def __init__(self, project_id, session_id):
             self.dfManager =  DialogflowManager(project_id, session_id, "es")
             self.dbManager = MongoODMManager("localhost", "27017", "happy_call")
-
-
             self.conversation = Conversation(name=session_id)
             self.emergency = Emergency(etype=EmergencyTypes.Normal)
             self.emergency.num_involved = 1
             self.emergency.pers_involved.append(defaultPerson())
 
-            #self.dbManager.insert_emergency(self.conversation.name, self.emergency)
+            self.dbManager.insert_conversation(self.conversation)
+            self.dbManager.insert_emergency(self.conversation.name, self.emergency)
     
     instance = None
 
@@ -51,6 +50,7 @@ class ProtocolController:
             if param != "" and param in "Mood_":
                 m = param.split("_")[1]
                 moods[m] += 1
+                moods['Counter'] += 1
                 flag = 1
         return moods,flag
     

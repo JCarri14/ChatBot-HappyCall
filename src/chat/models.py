@@ -32,6 +32,7 @@ class Moods(enum.Enum):
     Confused = "Confused"
     Sadness = "Sadness"
     Stressed = "Stressed"
+    Counter = "Counter"
 
 class Coefficients(enum.Enum):
     Ansiety = "Ansiety"

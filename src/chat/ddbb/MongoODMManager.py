@@ -33,9 +33,9 @@ class MongoODMManager:
             {'$set': {'messages': c.messages}})
 
     def insert_emergency(self, conversation_name, emergency):
-        emergency.save()
+        e = emergency.save()
         Conversation.objects.raw({'name': conversation_name}).update(
-            {'$set': {'emergency': emergency}})
+            {'$set': {'emergency': e._id}})
     
     def get_emergencies(self):
         res = Emergency.objects.all()

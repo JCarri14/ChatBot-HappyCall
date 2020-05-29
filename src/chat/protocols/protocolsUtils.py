@@ -15,12 +15,12 @@ def checkPersonsQuantity(params):
 def defaultPerson():
     disorders = {}
     for m in (Moods):
-        disorders[m] = 0
+        disorders[m.value] = 0
     healthContext = HealthContext(disorders=disorders)
 
     coefficients = {}
     for c in (Coefficients):
-        coefficients[c] = 0.0
+        coefficients[c.value] = 0.0
     return Person(role=Roles.Transmitter,
             healthContext = healthContext,
             sentimentCoefficients = coefficients)

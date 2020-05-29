@@ -15,6 +15,8 @@ class ProtocolController:
         def __init__(self, project_id, session_id):
             self.dfManager =  DialogflowManager(project_id, session_id, "es")
             self.dbManager = MongoODMManager("localhost", "27017", "happy_call")
+
+
             self.conversation = Conversation(name=session_id)
             self.emergency = Emergency(etype=EmergencyTypes.Normal)
             self.emergency.num_involved = 1
@@ -36,14 +38,14 @@ class ProtocolController:
             return ""
         else:
             info = self.instance.dfManager.request_fulfillment_text(text)   
-            res, flag = self.checkMoodInfo(params)
+            res, flag = self.checkMoodInfo(info['params'])
             if flag == 1:
                 self.instance.dbManager.update_person_moods(res)
             res = self.handle_intent(text, info)
             return info['text']
 
-    def checkMoodInfo(params):
-        moods = self.instance.dbManager.getPersonMoods()
+    def checkMoodInfo(self, params):
+        moods = self.instance.dbManager.get_person_mood()
         flag = 0
         for param in params:
             if param != "" and param in "Mood_":
@@ -76,8 +78,7 @@ class ProtocolController:
         if func != "Invalid intent":
             return func
         return text
-    
-    
+     
     def agressionWithVictim(self, input, params, result):
         numPersons = checkPersonsQuantity(params)
         p_name = checkPersonName(params)

@@ -48,6 +48,36 @@ class MongoODMManager:
     def get_emergencies_by_type(self, type):
         res = Emergency.objects.raw({'etype': type})
         return res
+    
+    def get_person_moods(self, conversation_name):
+        c = Conversation.object.raw({'name': conversation_name})
+        eID = c.emergency
+        e = Emergency.object.raw({"_id": eID})
+        res = e.pers_involved[0].healthContext.disorders
+        return res
+    
+    def update_person_moods(self, conversation_name, moods):
+        c = Conversation.object.raw({'name': conversation_name})
+        eID = c.emergency
+        e = Emergency.object.raw({"_id": eID})
+        res = e.pers_involved[0].healthContext.disorders
+        
+    
+    def get_person_coefficients(self, conversation_name):
+        c = Conversation.object.raw({'name': conversation_name})
+        eID = c.emergency
+        e = Emergency.object.raw({"_id": eID})
+        res = e.pers_involved[0].sentimentCoefficients
+        return res
+    
+    def update_person_coefficients(self, conversation_name, coefficients):
+        c = Conversation.object.raw({'name': conversation_name})
+        eID = c.emergency
+        e = Emergency.object.raw({"_id": eID})
+        res = e.pers_involved[0].sentimentCoefficients
+        
+
+
 
 
     

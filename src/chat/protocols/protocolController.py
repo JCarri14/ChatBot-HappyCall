@@ -18,7 +18,8 @@ class ProtocolController:
             self.conversation = Conversation(name=session_id)
             self.emergency = Emergency(etype=EmergencyTypes.Normal)
             self.emergency.num_involved = 1
-            self.emergency.pers_involved.append(Person(role=Roles.Transmitter))
+            self.emergency.pers_involved.append(defaultPerson())
+
             #self.dbManager.insert_emergency(self.conversation.name, self.emergency)
     
     instance = None
@@ -35,11 +36,23 @@ class ProtocolController:
             return ""
         else:
             info = self.instance.dfManager.request_fulfillment_text(text)   
+            res, flag = self.checkMoodInfo(params)
+            if flag == 1:
+                self.instance.dbManager.update_person_moods(res)
             res = self.handle_intent(text, info)
             return info['text']
+
+    def checkMoodInfo(params):
+        moods = self.instance.dbManager.getPersonMoods()
+        flag = 0
+        for param in params:
+            if param != "" and param in "Mood_":
+                m = param.split("_")[1]
+                moods[m] += 1
+                flag = 1
+        return moods,flag
     
     def handle_intent(self, text, info):
-        
         print(info['intent'])
         switcher = {
             "ProtocolAgressionWithVictim":self.agressionWithVictim(text, info['params'], info['text']),

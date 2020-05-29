@@ -3,7 +3,6 @@ from pymodm.connection import connect
 
 import datetime, enum
 
-
 connect("mongodb://localhost:27017/happy_call", alias="my-app")
 
 class EmergencyTypes(enum.Enum):
@@ -48,7 +47,8 @@ class HealthContext(EmbeddedMongoModel):
     status = fields.CharField()
     isPhysicallyHurt = fields.BooleanField(default=False)
     injuries = fields.ListField(fields.CharField())
-    disorders = fields.DictField(IntegerField(min_value=0, default=0))
+    disorders = fields.DictField()
+    #fields.IntegerField(min_value=0, default=0)
 
 class Person(EmbeddedMongoModel):
     name = fields.CharField()
@@ -56,7 +56,8 @@ class Person(EmbeddedMongoModel):
     gender = fields.CharField()    
     age = fields.IntegerField(min_value=0)
     healthContext = fields.EmbeddedDocumentField(HealthContext)
-    sentimentCoefficients = fields.DictField(FloatField(min_value=0, max_value=100, default=0))
+    sentimentCoefficients = fields.DictField()
+    #fields.FloatField(min_value=0, max_value=100, default=0)
 
 class EmergencyContext(EmbeddedMongoModel):
     address = fields.CharField()

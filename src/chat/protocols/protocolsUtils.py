@@ -1,3 +1,5 @@
+from chat.models import *
+
 def checkPersonAttributes(user_input, params):
     words = sentence_to_tokens(user_input)
     print(words)
@@ -38,3 +40,19 @@ def checkPersonsQuantity(params):
         if param == "number":
             return params[param][0]
     return 1
+
+def defaultPerson():
+    disorders = {}
+    for m in (Moods):
+        disorders[m] = 0
+    healthContext = HealthContext(disorders=disorders)
+
+    coefficients = {}
+    for c in (Coefficients):
+        coefficients[c] = 0.0
+    p = Person(role=Roles.Transmitter,
+            healthContext = healthContext,
+            sentimentCoefficient = coefficients)
+
+
+

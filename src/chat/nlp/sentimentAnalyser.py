@@ -1,6 +1,7 @@
+from chat.ddbb.MongoODMManager import MongoODMManager
 
-class SentimentAnalyser:
+def calculateSentiment(dbManager, moods, person):
+    coefficients = dbManager.get_person_coefficients(res)
+    
 
-    def __init__(self):
-        print()
     

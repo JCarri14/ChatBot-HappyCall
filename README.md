@@ -78,7 +78,7 @@ Chatbot for handling emergency calls
 
     ###### IMPORTANT 
     Some errors have been found & fixed during the import, but will appear everytime the project is cloned:
-    __To avoid them do the following:__\
+    __To avoid them do the following:__
     - Copy all content from __asyncriorector_fix.py__ ```(Windows) CTRL+A  CTRL+C```
     - Go to __env/Lib/twisted/internet/asyncriorector.py__ and change it with the copy. ```(Windows) CTRL+A  CTRL+V```
 
@@ -102,4 +102,4 @@ Chatbot for handling emergency calls
     python manage.py runserver <server_port> 
     ```
 - Finally, to access the ui:
-  - http://127.0.0.1:8000/
+  - http://127.0.0.1:8000/chat

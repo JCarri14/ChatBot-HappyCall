@@ -82,19 +82,18 @@ certaintyFactors = {
 def calcularCertaintyFactor(listKeys, probs, sentiment):
     actualCoefficient = probs[listKeys[0]] * certaintyFactors[sentiment][listKeys[0]]
         
-        for j in range(1, len(listKeys)):
-            probabilityX = actualCoefficient
-            probabilityY = probs[listKeys[j]] * certaintyFactors[sentiment][listKeys[j]]
-            
-            if probabilityX > 0 and probabilityY > 0:
-                actualCoefficient = probabilityX + probabilityY * (1 - probabilityX)
-            
-            elif probabilityX < 0 and probabilityY < 0:
-                actualCoefficient = probabilityX + probabilityY * (1 + probabilityX)
-            
-            else:
-                actualCoefficient = (probabilityX + probabilityY) / (1 - min([abs(probabilityX), abs(probabilityY)])
-    
+    for j in range(1, len(listKeys)):
+        probabilityX = actualCoefficient
+        probabilityY = probs[listKeys[j]] * certaintyFactors[sentiment][listKeys[j]]
+        
+        if probabilityX > 0 and probabilityY > 0:
+            actualCoefficient = probabilityX + probabilityY * (1 - probabilityX)
+        
+        elif probabilityX < 0 and probabilityY < 0:
+            actualCoefficient = probabilityX + probabilityY * (1 + probabilityX)
+        
+        else:
+            actualCoefficient = (probabilityX + probabilityY) / (1 - min([abs(probabilityX), abs(probabilityY)]))
     return actualCoefficient
 
 def calcularConditionalProbability(listKeys, probs, sentiment):

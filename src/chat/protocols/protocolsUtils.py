@@ -25,6 +25,3 @@ def defaultPerson():
             healthContext = healthContext,
             sentimentCoefficients = coefficients)
     
-
-
-

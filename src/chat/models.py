@@ -37,6 +37,8 @@ class Moods(enum.Enum):
 class Coefficients(enum.Enum):
     Ansiety = "Ansiety"
     Depression = "Depression"
+    Esquizofrenia = "Esquizofrenia"
+    Panico = "Panico"
 
 # Create your models here.
 class ChatMessage(EmbeddedMongoModel):

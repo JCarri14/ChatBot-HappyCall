@@ -17,16 +17,26 @@ class EmergencyTypes(enum.Enum):
 class HealthStatus(enum.Enum):
     Critical = "Critical"
     Bleeding = "Bleeding"
-    Serious = "Serious"
-    Scratch = "Scratch"
-    Dangerous = "Dangerous"
-    Altered = "Altered"
-    Scared = "Scared"
+    Fainted = "Fainted"
+    Wounded = "Wounded"
 
 class Roles(enum.Enum):
     Transmitter = "Transmitter"
     Aggressor = "Aggressor"
     Victim = "Victim"
+
+class Moods(enum.Enum):
+    Loneliness = "Loneliness"
+    Happyness = "Happyness"
+    MonetaryProblems = "MonetaryProblems"
+    Agressiveness = "Agressiveness"
+    Confused = "Confused"
+    Sadness = "Sadness"
+    Stressed = "Stressed"
+
+class Coefficients(enum.Enum):
+    Ansiety = "Ansiety"
+    Depression = "Depression"
 
 # Create your models here.
 class ChatMessage(EmbeddedMongoModel):
@@ -37,12 +47,8 @@ class ChatMessage(EmbeddedMongoModel):
 class HealthContext(EmbeddedMongoModel):
     status = fields.CharField()
     isPhysicallyHurt = fields.BooleanField(default=False)
-
-class PhysicalHealthContext(HealthContext):
     injuries = fields.ListField(fields.CharField())
-
-class MentalHealthContext(HealthContext):
-    disorders = fields.ListField(fields.CharField())
+    disorders = fields.DictField(IntegerField(min_value=0, default=0))
 
 class Person(EmbeddedMongoModel):
     name = fields.CharField()
@@ -50,6 +56,7 @@ class Person(EmbeddedMongoModel):
     gender = fields.CharField()    
     age = fields.IntegerField(min_value=0)
     healthContext = fields.EmbeddedDocumentField(HealthContext)
+    sentimentCoefficients = fields.DictField(FloatField(min_value=0, max_value=100, default=0))
 
 class EmergencyContext(EmbeddedMongoModel):
     address = fields.CharField()

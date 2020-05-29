@@ -39,39 +39,33 @@ class ProtocolController:
             return info['text']
     
     def handle_intent(self, text, info):
-        if info['intent'] == "ProtocolAgressionWithVictim":
-            return self.agressionWithVictim(info['text'], info['params'], text)
-
-        elif info['intent'] == "ProtocolAgressionWithoutVictim":
-            return self.agressionWithoutVictim(info['text'], info['params'], text)
-
-        elif info['intent'] == "ProtocolAgressionIdentification":
-            return self.agressionIdentification(info['text'], info['params'], text)
-
-        elif info['intent'] == "Default Welcome Intent":
-            return self.welcome(info['text'], info['params'], text)
-
-        elif info['intent'] == "FrasesMood":
-            return self.moodSentences(info['text'], info['params'], text)
-
-        elif info['intent'] == "ProtocolSuicideAttempt":
-            return self.suicideAttempt(info['text'], info['params'], text)
-
-        elif info['intent'] == "ProtocolVictimIdentification":
-            return self.victimIdentification(info['text'], info['params'], text)
-
-        elif info['intent'] == "GetPreferences":
-            return self.preferences(info['text'], info['params'], text)
-
-        elif info['intent'] == "DangerSuicide":
-            return self.dangerSuicide(info['text'], info['params'], text)
-
-        elif info['intent'] == "DangerOthers":
-            return self.dangerOthers(info['text'], info['params'], text)
+        
+        print(info['intent'])
+        switcher = {
+            "ProtocolAgressionWithVictim":self.agressionWithVictim(text, info['params'], info['text']),
+            "ProtocolAgressionWithoutVictim":self.agressionWithoutVictim(text, info['params'], info['text']),
+            "ProtocolAgressionIdentification (Without Context)":self.agressionIdentificationWithout(text, info['params'], info['text']),
+            "ProtocolAgressionIdentification (With Context)":self.agressionIdentificationWith(text, info['params'], info['text']),
+            "Default Welcome Intent":self.welcome(text, info['params'], info['text']),
+            "ProtocolBleedingBase":self.bleedingBase(text, info['params'], info['text']),
+            "ProtocolCriticalHealth":self.criticalHealth(text, info['params'], info['text']),
+            "ProtocolFaintingBase":self.faintingBase(text, info['params'], info['text']),
+            "ProtocolWoundBase":self.woundBase(text, info['params'], info['text']),
+            "FrasesMood":self.moodSentences(text, info['params'], info['text']),
+            "GetPreferences":self.getPreferences(text, info['params'], info['text']),
+            "ProtocolSuicideAttempt":self.suicideAttempt(text, info['params'], info['text']),
+            "ProtocolVictimIdentification":self.victimIdentification(text, info['params'], info['text']),
+            "GetPreferences":self.preferences(text, info['params'], info['text']),
+            "DangerSuicide":self.dangerSuicide(text, info['params'], info['text']),
+            "DangerOthers":self.dangerOthers(text, info['params'], info['text'])
+        }
+        func = switcher.get(info['intent'], "Invalid intent" )
+        if func != "Invalid intent":
+            return func
         return text
     
-    def agressionWithVictim(self, input, params, result):
     
+    def agressionWithVictim(self, input, params, result):
         numPersons = checkPersonsQuantity(params)
         p_name = checkPersonName(params)
         p = Person(name=p_name)
@@ -82,7 +76,10 @@ class ProtocolController:
     def agressionWithoutVictim(self, input, params, result):
         return result
 
-    def agressionIdentification(self, input, params, result):
+    def agressionIdentificationWithout(self, input, params, result):
+        return result
+    
+    def agressionIdentificationWith(self, input, params, result):
         return result
 
     def welcome(self, input, params, result):
@@ -93,7 +90,22 @@ class ProtocolController:
                                                 #self.instance.emergency.pers_involved)
         return result
 
+    def bleedingBase(self, input, params, result):
+        return result
+    
+    def criticalHealth(self, input, params, result):
+        return result
+    
+    def faintingBase(self, input, params, result):
+        return result
+    
+    def woundBase(self, input, params, result):
+        return result
+
     def moodSentences(self, input, params, result):
+        return result
+    
+    def getPreferences(self, input, params, result):
         return result
 
     def victimIdentification(self, input, params, result):

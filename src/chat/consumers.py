@@ -28,16 +28,22 @@ class ChatConsumer(WebsocketConsumer):
     # Receive message from WebSocket
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json['message']
+        user_input = text_data_json['message']
         project_id = os.getenv('DIALOGFLOW_PROJECT_ID')
         session_id = self.room_group_name
         
-        message = ProtocolController(project_id, session_id).handle_input(message) 
+        message = ProtocolController(project_id, session_id).handle_input(user_input) 
         
-        response = {
+        response = [
+            {
+            'sender': "user-mssg",
+            'text': user_input
+            },
+            {
             'sender': "bot-mssg",
             'text': message
-        }
+            },
+        ]
         # Send message to room group
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
@@ -128,14 +134,12 @@ class ReadOnlyChatConsumer(WebsocketConsumer):
             
     # Receive message from room group
     def chat_message(self, event):
-        response = {
-            'sender': "user-mssg",
-            'text': event['message']
-        }
         # Send message to WebSocket
-        self.send(text_data=json.dumps({
-            'message': response
-        }))
+        print(event['message'])
+        for m in event['message']:
+            self.send(text_data=json.dumps({
+                'message': m
+            }))
 
     def send_message(self, sender, text):
         response = {

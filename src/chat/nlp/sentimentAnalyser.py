@@ -1,6 +1,6 @@
 from chat.ddbb.MongoODMManager import MongoODMManager
 from chat.models import Moods, Coefficients
-
+"""
 conditionalProbs = {
     "ansiety": {
         "loneliness": 0.65,
@@ -43,24 +43,24 @@ conditionalProbs = {
         "stress": 0.85
     }
 }
-
+"""
 certaintyFactors = {
     "ansiety": {
-        "loneliness": 0.65,
+        "loneliness": 0.6,
         "happiness": -0.85,
         "monetaryproblems": 0.5,
-        "aggressiveness": 0.3,
-        "confused": -0.35,
-        "fear": 0.7,
-        "sadness":  0.6,
+        "aggressiveness": -0.5,
+        "confused": 0.2,
+        "fear": 0.6,
+        "sadness":  0.4,
         "stress": 0.95
     },
     "depression": {
         "loneliness": 0.6,
         "happiness": -0.95,
-        "monetaryproblems": 0.75,
-        "aggressiveness": -0.3,
-        "confused": -0.4,
+        "monetaryproblems": 0.7,
+        "aggressiveness": -0.5,
+        "confused": -0.5,
         "fear": 0.3,
         "sadness":  0.95,
         "stress": 0.5
@@ -69,20 +69,20 @@ certaintyFactors = {
         "loneliness": -0.7,
         "happiness": -0.85,
         "monetaryproblems": -0.8,
-        "aggressiveness": 0.9,
-        "confused": 0.75,
-        "fear": 0.6,
+        "aggressiveness": 0.8,
+        "confused": 0.7,
+        "fear": 0.65,
         "sadness":  0.5,
         "stress": 0.6
     },
     "panico": {
         "loneliness": 0.6,
         "happiness": -0.95,
-        "monetaryproblems": -0.2,
-        "aggressiveness": -0.3,
-        "confused": 0.75,
+        "monetaryproblems": -0.65,
+        "aggressiveness": -0.45,
+        "confused": 0.65,
         "fear": 0.95,
-        "sadness":  0.5,
+        "sadness":  0.4,
         "stress": 0.75
     }
 }
@@ -103,7 +103,7 @@ def calcularCertaintyFactor(listKeys, probs, sentiment):
         else:
             actualCoefficient = (probabilityX + probabilityY) / (1 - min([abs(probabilityX), abs(probabilityY)]))
     return actualCoefficient
-
+"""
 def calcularConditionalProbability(listKeys, probs, sentiment):
     actualProbability = 0
     sumProbabilities = 0
@@ -116,7 +116,7 @@ def calcularConditionalProbability(listKeys, probs, sentiment):
         actualProbability = actualProbability + (probs[listKeys[i]] * conditionalProbs[sentiment][listKeys[i]] * conditionalProbs[sentiment][listKeys[i]]) / sumProbabilities
 
     return actualProbability
-
+"""
 def calculateSentiment(dbManager, conversation_name, moods, person):
     print(moods)
     coefficients = dbManager.get_person_coefficients(conversation_name)
@@ -125,7 +125,7 @@ def calculateSentiment(dbManager, conversation_name, moods, person):
     for sentiment in coefficients:
         listKeys = list(certaintyFactors[sentiment].keys())
         print("------------", sentiment, "------------")
-        print("BAYESSIAN PROBABILITY: ", calcularConditionalProbability(listKeys, probs, sentiment))
+        #print("BAYESSIAN PROBABILITY: ", calcularConditionalProbability(listKeys, probs, sentiment))
         coefficients[sentiment] = calcularCertaintyFactor(listKeys, probs, sentiment)
         print("CERTAINTY FACTOR: ", coefficients[sentiment])
 

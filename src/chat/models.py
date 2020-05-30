@@ -25,20 +25,21 @@ class Roles(enum.Enum):
     Victim = "Victim"
 
 class Moods(enum.Enum):
-    Loneliness = "Loneliness"
-    Happyness = "Happyness"
-    MonetaryProblems = "MonetaryProblems"
-    Agressiveness = "Agressiveness"
-    Confused = "Confused"
-    Sadness = "Sadness"
-    Stressed = "Stressed"
-    Counter = "Counter"
+    Loneliness = "loneliness"
+    Happiness = "happiness"
+    MonetaryProblems = "monetaryproblems"
+    Agressiveness = "aggressiveness"
+    Confused = "confused"
+    Fear = "fear"
+    Sadness = "sadness"
+    Stress = "stress"
+    Counter = "counter"
 
 class Coefficients(enum.Enum):
-    Ansiety = "Ansiety"
-    Depression = "Depression"
-    Esquizofrenia = "Esquizofrenia"
-    Panico = "Panico"
+    Ansiety = "ansiety"
+    Depression = "depression"
+    Esquizofrenia = "esquizofrenia"
+    Panico = "panico"
 
 # Create your models here.
 class ChatMessage(EmbeddedMongoModel):
@@ -53,7 +54,7 @@ class HealthContext(EmbeddedMongoModel):
     disorders = fields.DictField()
     #fields.IntegerField(min_value=0, default=0)
 
-class Person(EmbeddedMongoModel):
+class Person(MongoModel):
     name = fields.CharField()
     role = fields.CharField()
     gender = fields.CharField()    
@@ -70,7 +71,7 @@ class Emergency(MongoModel):
     etype = fields.CharField()
     context = fields.EmbeddedDocumentField(EmergencyContext)
     num_involved = fields.IntegerField(min_value=0)
-    pers_involved = fields.EmbeddedDocumentListField(Person)
+    pers_involved = fields.ListField(fields.ReferenceField(Person))
 
 class Conversation(MongoModel):
     name = fields.CharField()

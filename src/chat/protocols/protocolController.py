@@ -1,9 +1,10 @@
 from chat.dialogflow_api.dfManager import DialogflowManager
 from chat.ddbb.MongoODMManager import MongoODMManager
 from chat.nlp.sentenceTokenizer import *
+from chat.nlp.sentimentAnalyser import calculateSentiment
 from chat.models import *
 from .protocolsUtils import *
-import datetime
+import datetime, re
 
 class ProtocolController:
     
@@ -18,10 +19,13 @@ class ProtocolController:
             self.conversation = Conversation(name=session_id)
             self.emergency = Emergency(etype=EmergencyTypes.Normal)
             self.emergency.num_involved = 1
-            self.emergency.pers_involved.append(defaultPerson())
+            #self.emergency.pers_involved = []
 
             self.dbManager.insert_conversation(self.conversation)
-            self.dbManager.insert_emergency(self.conversation.name, self.emergency)
+            pId = self.dbManager.insert_person(defaultPerson())
+            self.emergency.pers_involved.append(pId)
+            eId = self.dbManager.insert_emergency(self.emergency)
+            self.dbManager.link_emergency_to_conversation(self.conversation.name, eId)
     
     instance = None
 
@@ -31,31 +35,32 @@ class ProtocolController:
     
     def handle_input(self, text):
         if text == "END_CONVERSATION":
-            #dbManager = MongoODMManager("localhost", "27017", "happy_call")
             self.instance.conversation.finished_at = datetime.datetime.utcnow
-            self.instance.dbManager.insert_conversation(self.instance.conversation)
             return ""
         else:
-            info = self.instance.dfManager.request_fulfillment_text(text)   
+            info = self.instance.dfManager.request_fulfillment_text(text)
             res, flag = self.checkMoodInfo(info['params'])
             if flag == 1:
-                self.instance.dbManager.update_person_moods(res)
+                self.instance.dbManager.update_person_moods(self.instance.conversation.name, res)
+                calculateSentiment(self.instance.dbManager, self.instance.conversation.name, res, "")
             res = self.handle_intent(text, info)
             return info['text']
 
     def checkMoodInfo(self, params):
-        moods = self.instance.dbManager.get_person_mood()
+        moods = self.instance.dbManager.get_person_moods(self.instance.conversation.name)
         flag = 0
+        word = re.compile('mood_') 
+        point = re.compile(".")
+
         for param in params:
-            if param != "" and param in "Mood_":
+            if params.get(param) and word.search(param) and "." not in param:
                 m = param.split("_")[1]
                 moods[m] += 1
-                moods['Counter'] += 1
+                moods['counter'] += 1
                 flag = 1
         return moods,flag
     
     def handle_intent(self, text, info):
-        print(info['intent'])
         switcher = {
             "ProtocolAgressionWithVictim":self.agressionWithVictim(text, info['params'], info['text']),
             "ProtocolAgressionWithoutVictim":self.agressionWithoutVictim(text, info['params'], info['text']),

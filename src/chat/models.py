@@ -72,13 +72,15 @@ class Emergency(MongoModel):
     context = fields.EmbeddedDocumentField(EmergencyContext)
     num_involved = fields.IntegerField(min_value=0)
     pers_involved = fields.ListField(fields.ReferenceField(Person))
+    is_active = fields.BooleanField(default=True)
 
 class Conversation(MongoModel):
     name = fields.CharField()
     created_at = fields.DateTimeField(default=datetime.datetime.utcnow)
     finished_at = fields.DateTimeField()
     messages = fields.EmbeddedDocumentListField(ChatMessage)
-    emergency = fields.ReferenceField(Emergency)
+    witness = fields.ReferenceField(Person)
+    emergencies = fields.ListField(fields.ReferenceField(Emergency))
 
 
 

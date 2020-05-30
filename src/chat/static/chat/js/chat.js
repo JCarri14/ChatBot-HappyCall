@@ -12,7 +12,7 @@ const chatSocket = new WebSocket(
 chatSocket.onmessage = function(e) {
     const data = JSON.parse(e.data);
     if (lastInput != data.message) {
-        addListItem("bot-mssg", data.message);    
+        addListItem(data.message.sender, data.message.text);    
     }
 };
 
@@ -23,7 +23,7 @@ chatSocket.onclose = function(e) {
 document.querySelector('#chat-message-input').focus();
 document.querySelector('#chat-message-input').onkeyup = function(e) {
     if (e.keyCode === 13) {  // enter, return
-        document.querySelector('#chat-message-submit').click();
+        document.querySelector('.container-submit').click();
     }
 };
 

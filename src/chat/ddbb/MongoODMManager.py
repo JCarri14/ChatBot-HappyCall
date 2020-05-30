@@ -72,7 +72,7 @@ class MongoODMManager:
     def update_person_moods(self, conversation_name, moods):
         c = Conversation.objects.raw({'name': conversation_name})[0]
         p = c.emergency.pers_involved[0]
-        p.healthContext.disorders = moods
+        #p.healthContext.disorders = moods
         Person.objects.raw({"_id": p._id}).update(
             {'$set': {'healthContext.disorders': moods}})       
     
@@ -82,9 +82,8 @@ class MongoODMManager:
         
     def update_person_coefficients(self, conversation_name, coefficients):
         c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = c.emergency 
-        e.pers_involved[0].sentimentCoefficients = coefficients
-        Emergency.objects.raw({"_id": e._id}).update(
-            {'$set': {'pers_involved': e.pers_involved}})         
+        p = c.emergency.pers_involved[0]
+        Person.objects.raw({"_id": p._id}).update(
+            {'$set': {'sentimentCoefficients': coefficients}})          
 
     

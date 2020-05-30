@@ -1,20 +1,35 @@
-import dialogflow as dialogflow
+import dialogflow_v2 as dialogflow
 import re
 
 
 class DialogflowManager:
 
     def __init__(self, project_id, session_id, language_code):
+
+        self.project_id = project_id
+        self.session_id = session_id
+
         self.intents_client = dialogflow.IntentsClient()
         self.parent = self.intents_client.project_agent_path(project_id)
         self.intents = self.intents_client.list_intents(self.parent) 
-
+        
+        self.contexts_client = dialogflow.ContextsClient()
+        self.context_parent = self.contexts_client.session_path(project_id, session_id)
+        
         self.session_client = dialogflow.SessionsClient()
         self.session = self.session_client.session_path(project_id, session_id)
         self.lang_code = "es"
     
     def get_intents(self):
         return self.intents
+    
+    def get_contexts(self):
+        return self.contexts_client.list_contexts(self.context_parent)
+    
+    def set_contexts(self, contexts):
+        self.contexts_client.delete_all_contexts(self.context_parent)
+        for c in contexts:
+            self.contexts_client.create_context(self.context_parent, c)
 
     def request_fulfillment_text(self, text):
         res = ""

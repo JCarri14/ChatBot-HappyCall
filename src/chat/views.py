@@ -23,7 +23,8 @@ def dashboard(request):
 
 def room_control(request, room_name):
     dbManager = MongoODMManager("localhost", "27017", "happy_call")
-    m = dbManager.get_conversation_messages(room_name)
+    m = dbManager.get_conversation_messages("chat_" + room_name)
+    print(m)
     context = {
         'room_name': room_name,
         'messages': m,

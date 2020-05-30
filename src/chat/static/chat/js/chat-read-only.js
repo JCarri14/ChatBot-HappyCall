@@ -12,10 +12,8 @@ const chatSocket = new WebSocket(
 chatSocket.onmessage = function(e) {
     const data = JSON.parse(e.data);
     console.log(data);
-    if (data.messages) {
-        for (message of data.messages) {
-            addListItem(message.sender, message.text);    
-        }
+    if (data.message) {
+        addListItem(data.message.sender, data.message.text);    
     }
 };
 

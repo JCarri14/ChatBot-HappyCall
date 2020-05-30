@@ -50,12 +50,15 @@ class DialogflowManager:
         res['intent'] = response.query_result.intent.display_name
         res['params'] = {}
         word = re.compile('contexts/__system_counters__') 
+        
         for context in response.query_result.output_contexts:
             if word.search(context.name):
                 for param in context.parameters:
                     res['params'][param] = param
                 break
+        
         word = re.compile('mood_') 
+        
         for param in response.query_result.parameters:
             if word.search(param.lower()):
                 res['params'][param.lower()] = response.query_result.parameters[param]

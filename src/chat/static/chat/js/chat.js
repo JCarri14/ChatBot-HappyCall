@@ -11,8 +11,13 @@ const chatSocket = new WebSocket(
 
 chatSocket.onmessage = function(e) {
     const data = JSON.parse(e.data);
-    if (lastInput != data.message) {
-        addListItem(data.message.sender, data.message.text);    
+    if (data.message) {
+        console.log(data.message);
+        for (message of data.message) {
+            if (message.sender != "user-mssg") {
+                addListItem(message.sender, message.text);    
+            }
+        }
     }
 };
 

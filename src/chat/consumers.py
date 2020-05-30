@@ -50,7 +50,6 @@ class ChatConsumer(WebsocketConsumer):
     # Receive message from room group
     def chat_message(self, event):
         message = event['message']
-        print("Arriva a aquiiiiiiiiiiiiiiiiiiiiii")
         # Send message to WebSocket
         self.send(text_data=json.dumps({
             'message': message
@@ -73,10 +72,11 @@ class DashboardConsumer(WebsocketConsumer):
         
         if "update" in message:
             dbManager = MongoODMManager("localhost", "27017", "happy_call")
-            conversations = dbManager.get_conversations()
-            conversations = [cconversations[d]['name'] for d in conversations]
-            for c in conversations:
-                send_message("conversation", c)  
+            c = list(dbManager.get_conversations())
+            if c and len(c) > 0:
+                c = [c[i].name for i in range(len(c)) if c[i].name]
+            for cId in c:
+                self.send_message("conversation", cId)  
 
     # Receive message from room group
     def chat_message(self, event):
@@ -101,7 +101,7 @@ class ReadOnlyChatConsumer(WebsocketConsumer):
     def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
-
+    
         # Join room group
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,

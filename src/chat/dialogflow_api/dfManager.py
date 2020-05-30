@@ -30,6 +30,9 @@ class DialogflowManager:
         self.contexts_client.delete_all_contexts(self.context_parent)
         for c in contexts:
             self.contexts_client.create_context(self.context_parent, c)
+    
+    def create_context(self, context):
+        self.contexts_client.create_context(self.context_parent, context)
 
     def delete_context(self, context):
         self.contexts_client.delete_context(self.context_parent, context)

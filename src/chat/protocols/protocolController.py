@@ -73,6 +73,7 @@ class ProtocolController:
             "ProtocolAgressionWithoutVictim":self.agressionWithoutVictim,
             "ProtocolAgressionIdentification (Without Context)":self.agressionIdentificationWithout,
             "ProtocolAgressionIdentification (With Context)":self.agressionIdentificationWith,
+            "ProtocolMurder":self.murder,
             "Default Welcome Intent":self.welcome,
             "ProtocolBleedingBase":self.bleedingBase,
             "ProtocolCriticalHealth":self.criticalHealth,
@@ -87,7 +88,7 @@ class ProtocolController:
             "DangerOthers":self.dangerOthers
         }
         func = switcher.get(info['intent'], "Invalid intent" )
-        #print(list(self.instance.contexts))
+        
         if func != "Invalid intent":
             text = func(text, info['params'], info['text'])
         self.instance.contexts = list(self.instance.dfManager.get_contexts())
@@ -98,10 +99,16 @@ class ProtocolController:
         p_name = checkPersonName(params)
         p = Person(name=p_name)
         self.instance.session['emergency'].pers_involved.append(p)
+        restoreProtocolContext()
         #self.instance.dbManager.update_emergencies_persons(self.instance.session['emergency'].etype,self.instance.session['emergency'].pers_involved)
         return result
 
     def agressionWithoutVictim(self, input, params, result):
+        numPersons = checkPersonsQuantity(params)
+        p_name = checkPersonName(params)
+        p = Person(name=p_name)
+        self.instance.session['emergency'].pers_involved.append(p)
+        restoreProtocolContext()
         return result
 
     def agressionIdentificationWithout(self, input, params, result):
@@ -109,6 +116,11 @@ class ProtocolController:
     
     def agressionIdentificationWith(self, input, params, result):
         return result
+
+    def murder(){
+        restoreProtocolContext()
+        return result
+    }
 
     def welcome(self, input, params, result):
         person_name = checkPersonName(params)
@@ -119,16 +131,18 @@ class ProtocolController:
         return result
 
     def bleedingBase(self, input, params, result):
-        print("Holaa")
+        restoreHealthContext()
         return result
     
     def criticalHealth(self, input, params, result):
         return result
     
     def faintingBase(self, input, params, result):
+        restoreHealthContext()
         return result
     
     def woundBase(self, input, params, result):
+        restoreHealthContext()
         return result
 
     def moodSentences(self, input, params, result):
@@ -171,6 +185,23 @@ class ProtocolController:
             return result + ". Pero ahora centremonos en la pregunta anterior, por favor."
         return result
     
+    def restoreProtocolContext(self):
+        words = re.compile('protocolCompleted')
+        
+        for context in self.instance.contexts:
+            if words.search(context.name):
+                self.instance.dfManager.delete_context(context)
+                return
+    
+    def restoreHealthContext(self):
+        words = re.compile('healthCompleted')
+        
+        for context in self.instance.contexts:
+            if words.search(context.name):
+                self.instance.dfManager.delete_context(context)
+                return
+
+
     
         
 

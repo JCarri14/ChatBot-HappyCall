@@ -1,15 +1,25 @@
 from chat.models import *
 
+#params.get(param) != None
+
 def checkPersonName(params):
     for param in params:
         if param == "person.original":
-            return params[param][0]
+            if isinstance(params[param], list):
+                if len(params[param]) > 0:
+                    return params[param][0]
+            elif params.get(param):
+                return params[param]
     return "Person"
 
 def checkPersonsQuantity(params):
     for param in params:
         if param == "number":
-            return params[param][0]
+            if isinstance(params[param], list):
+                if len(params[param]) > 0:
+                    return params[param][0]
+            elif params.get(param):
+                return params[param]
     return 1
 
 def defaultPerson():

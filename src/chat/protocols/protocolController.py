@@ -19,6 +19,7 @@ class ProtocolController:
             self.conversation = Conversation(name=session_id)
             self.emergency = Emergency(etype=EmergencyTypes.Normal)
             self.emergency.num_involved = 1
+            self.contexts = []
             #self.emergency.pers_involved = []
 
             self.dbManager.insert_conversation(self.conversation)
@@ -43,8 +44,8 @@ class ProtocolController:
             if flag == 1:
                 self.instance.dbManager.update_person_moods(self.instance.conversation.name, res)
                 calculateSentiment(self.instance.dbManager, self.instance.conversation.name, res, "")
-            res = self.handle_intent(text, info)
-            return info['text']
+            text_response = self.handle_intent(text, info)
+            return text_response
 
     def checkMoodInfo(self, params):
         moods = self.instance.dbManager.get_person_moods(self.instance.conversation.name)
@@ -62,26 +63,28 @@ class ProtocolController:
     
     def handle_intent(self, text, info):
         switcher = {
-            "ProtocolAgressionWithVictim":self.agressionWithVictim(text, info['params'], info['text']),
-            "ProtocolAgressionWithoutVictim":self.agressionWithoutVictim(text, info['params'], info['text']),
-            "ProtocolAgressionIdentification (Without Context)":self.agressionIdentificationWithout(text, info['params'], info['text']),
-            "ProtocolAgressionIdentification (With Context)":self.agressionIdentificationWith(text, info['params'], info['text']),
-            "Default Welcome Intent":self.welcome(text, info['params'], info['text']),
-            "ProtocolBleedingBase":self.bleedingBase(text, info['params'], info['text']),
-            "ProtocolCriticalHealth":self.criticalHealth(text, info['params'], info['text']),
-            "ProtocolFaintingBase":self.faintingBase(text, info['params'], info['text']),
-            "ProtocolWoundBase":self.woundBase(text, info['params'], info['text']),
-            "FrasesMood":self.moodSentences(text, info['params'], info['text']),
-            "GetPreferences":self.getPreferences(text, info['params'], info['text']),
-            "ProtocolSuicideAttempt":self.suicideAttempt(text, info['params'], info['text']),
-            "ProtocolVictimIdentification":self.victimIdentification(text, info['params'], info['text']),
-            "GetPreferences":self.preferences(text, info['params'], info['text']),
-            "DangerSuicide":self.dangerSuicide(text, info['params'], info['text']),
-            "DangerOthers":self.dangerOthers(text, info['params'], info['text'])
+            "ProtocolAgressionWithVictim":self.agressionWithVictim,
+            "ProtocolAgressionWithoutVictim":self.agressionWithoutVictim,
+            "ProtocolAgressionIdentification (Without Context)":self.agressionIdentificationWithout,
+            "ProtocolAgressionIdentification (With Context)":self.agressionIdentificationWith,
+            "Default Welcome Intent":self.welcome,
+            "ProtocolBleedingBase":self.bleedingBase,
+            "ProtocolCriticalHealth":self.criticalHealth,
+            "ProtocolFaintingBase":self.faintingBase,
+            "ProtocolWoundBase":self.woundBase,
+            "FrasesMood":self.moodSentences,
+            "GetPreferences":self.getPreferences,
+            "ProtocolSuicideAttempt":self.suicideAttempt,
+            "ProtocolVictimIdentification":self.victimIdentification,
+            "GetPreferences":self.preferences,
+            "DangerSuicide":self.dangerSuicide,
+            "DangerOthers":self.dangerOthers
         }
         func = switcher.get(info['intent'], "Invalid intent" )
+        #print(list(self.instance.contexts))
         if func != "Invalid intent":
-            return func
+            text = func(text, info['params'], info['text'])
+        self.instance.contexts = list(self.instance.dfManager.get_contexts())
         return text
      
     def agressionWithVictim(self, input, params, result):
@@ -110,6 +113,7 @@ class ProtocolController:
         return result
 
     def bleedingBase(self, input, params, result):
+        print("Holaa")
         return result
     
     def criticalHealth(self, input, params, result):
@@ -122,6 +126,21 @@ class ProtocolController:
         return result
 
     def moodSentences(self, input, params, result):
+    
+        words = [re.compile('healthCompleted') ,
+                re.compile('protocolCompleted'),
+                re.compile('followup'),
+                re.compile('dialog_context')]
+        flags = [0,0,0,0]
+        for c in self.instance.contexts:
+            print(c.name)
+            for i in range(len(words)):
+                if words[i].search(c.name):
+                    flags[i] = 1
+        self.instance.dfManager.set_contexts(self.instance.contexts)
+        print(flags)
+        if flags[3] == 1 or flags[2] == 1 or (flags[0] == 1 and flags[1] == 0) or (flags[0] == 0 and flags[1] == 1):
+            return result + ". Pero ahora centremonos en la pregunta anterior, por favor." 
         return result
     
     def getPreferences(self, input, params, result):

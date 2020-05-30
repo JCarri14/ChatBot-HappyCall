@@ -43,12 +43,14 @@ class ProtocolController:
             self.instance.session['conversation'].finished_at = datetime.datetime.utcnow
             return ""
         else:
+            self.instance.dbManager.add_message(self.instance.session['conversation'].name, "user-mssg", text)
             info = self.instance.dfManager.request_fulfillment_text(text)
             res, flag = self.checkMoodInfo(info['params'])
             if flag == 1:
                 self.instance.dbManager.update_witness_moods(self.instance.session['conversation'].name, res)
                 calculateSentiment(self.instance.dbManager, self.instance.session['conversation'].name, res, "")
             text_response = self.handle_intent(text, info)
+            self.instance.dbManager.add_message(self.instance.session['conversation'].name, "bot-mssg", text_response)
             return text_response
 
     def checkMoodInfo(self, params):

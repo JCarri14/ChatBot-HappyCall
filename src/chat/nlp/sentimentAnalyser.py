@@ -108,6 +108,7 @@ def calcularConditionalProbability(listKeys, probs, sentiment):
     actualProbability = 0
     sumProbabilities = 0
 
+    print(listKeys)
     for i in range(len(listKeys)):
         sumProbabilities = sumProbabilities + (probs[listKeys[i]] * conditionalProbs[sentiment][listKeys[i]])
     
@@ -122,10 +123,10 @@ def calculateSentiment(dbManager, conversation_name, moods, person):
     probs = {i: moods[i]/moods["counter"] for i in moods if i != "counter"}
     
     for sentiment in coefficients:
-        listKeys = certaintyFactors[sentiment].keys()
+        listKeys = list(certaintyFactors[sentiment].keys())
         print("------------", sentiment, "------------")
         print("BAYESSIAN PROBABILITY: ", calcularConditionalProbability(listKeys, probs, sentiment))
         coefficients[sentiment] = calcularCertaintyFactor(listKeys, probs, sentiment)
         print("CERTAINTY FACTOR: ", coefficients[sentiment])
 
-    dbManager.update_person_coefficients(conversation_name, moods)
+    dbManager.update_person_coefficients(conversation_name, coefficients)

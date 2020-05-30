@@ -11,8 +11,6 @@ class ProtocolController:
     __instance = None
     __lang = "es"
 
-    
-    
     class __Manager:
         
         def __init__(self, project_id, session_id):
@@ -24,6 +22,7 @@ class ProtocolController:
                 "witness": defaultPerson()
             }
             self.save_initial_session_values()
+            self.contexts = list(self.dfManager.get_contexts())
         
         def save_initial_session_values(self):
             pId = self.dbManager.insert_person(self.session['witness'])
@@ -88,11 +87,11 @@ class ProtocolController:
             "DangerOthers":self.dangerOthers
         }
         func = switcher.get(info['intent'], "Invalid intent" )
-        
+        response = info['text']
         if func != "Invalid intent":
-            text = func(text, info['params'], info['text'])
+            response = func(text, info['params'], info['text'])
         self.instance.contexts = list(self.instance.dfManager.get_contexts())
-        return text
+        return response
      
     def agressionWithVictim(self, input, params, result):
         numPersons = checkPersonsQuantity(params)
@@ -117,11 +116,10 @@ class ProtocolController:
     def agressionIdentificationWith(self, input, params, result):
         return result
 
-    def murder(){
-        restoreProtocolContext()
+    def murder(self, input, params, result):
+        self.restoreProtocolContext()
         return result
-    }
-
+    
     def welcome(self, input, params, result):
         person_name = checkPersonName(params)
         self.instance.session['conversation'].witness.name = person_name

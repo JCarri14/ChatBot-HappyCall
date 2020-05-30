@@ -19,6 +19,19 @@
     cursor: pointer;
 }
 
+.list-group {
+    max-height: 250px;
+    overflow: auto;
+}
+
+.list-group p {
+    margin: 0px;
+}
+
+.list-group p:hover{
+    cursor: pointer;
+}
+
 
 @media screen and (max-width:575px) {
     .col-item:not(:first-child) {

@@ -32,10 +32,13 @@ class MongoODMManager:
         Conversation.objects.raw({'name': conversation_name}).update(
             {'$set': {'messages': c.messages}})
 
-    def insert_emergency(self, conversation_name, emergency):
+    def insert_emergency(self, emergency):
         e = emergency.save()
+        return e._id
+    
+    def link_emergency_to_conversation(self, conversation_name, eId):
         Conversation.objects.raw({'name': conversation_name}).update(
-            {'$set': {'emergency': e._id}})
+            {'$set': {'emergency': eId}})
     
     def get_emergencies(self):
         res = Emergency.objects.all()
@@ -50,34 +53,40 @@ class MongoODMManager:
         return res
     
     def get_person_moods(self, conversation_name):
-        c = Conversation.object.raw({'name': conversation_name})
-        eID = c.emergency
-        e = Emergency.object.raw({"_id": eID})
-        res = e.pers_involved[0].healthContext.disorders
-        return res
+        # .raw returns a queryset, as it's assured each conversation has its unique name we can do the following
+        c = Conversation.objects.raw({'name': conversation_name})[0]
+        return c.emergency.pers_involved[0].healthContext.disorders
     
+    def insert_person(self, person):
+        p = person.save()
+        return p._id
+
+    def link_person_to_emergency(self, conversation_name, pId):
+        e = Conversation.objects.raw({'name': conversation_name})[0].emergency
+        e.pers_involved = [] 
+        e.pers_involved.append(pId) 
+        e.num_involved += 1
+        Emergency.objects.raw({'_id': e._id}).update(
+            {'$set': {'pers_involved': e.pers_involved, 'num_involved': e.num_involved}})
+
     def update_person_moods(self, conversation_name, moods):
-        c = Conversation.object.raw({'name': conversation_name})
-        eID = c.emergency
-        e = Emergency.object.raw({"_id": eID})
-        res = e.pers_involved[0].healthContext.disorders
-        
+        c = Conversation.objects.raw({'name': conversation_name})[0]
+        p = c.emergency.pers_involved[0]
+        p.healthContext.disorders = moods
+        Person.objects.raw({"_id": p._id}).update(
+            {'$set': {'healthContext.disorders': moods}}) 
+        """Emergency.objects.raw({"_id": eID}).update(
+            {'$set': {'pers_involved': e.pers_involved}}) """       
     
     def get_person_coefficients(self, conversation_name):
-        c = Conversation.object.raw({'name': conversation_name})
-        eID = c.emergency
-        e = Emergency.object.raw({"_id": eID})
-        res = e.pers_involved[0].sentimentCoefficients
-        return res
-    
-    def update_person_coefficients(self, conversation_name, coefficients):
-        c = Conversation.object.raw({'name': conversation_name})
-        eID = c.emergency
-        e = Emergency.object.raw({"_id": eID})
-        res = e.pers_involved[0].sentimentCoefficients
+        c = Conversation.objects.raw({'name': conversation_name})[0]
+        return c.emergency.pers_involved[0].sentimentCoefficients
         
-
-
-
+    def update_person_coefficients(self, conversation_name, coefficients):
+        c = Conversation.objects.raw({'name': conversation_name})[0]
+        e = c.emergency 
+        e.pers_involved[0].sentimentCoefficients = coefficients
+        Emergency.objects.raw({"_id": e._id}).update(
+            {'$set': {'pers_involved': e.pers_involved}})         
 
     

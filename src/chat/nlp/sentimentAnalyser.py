@@ -2,80 +2,88 @@ from chat.ddbb.MongoODMManager import MongoODMManager
 from chat.models import Moods, Coefficients
 
 conditionalProbs = {
-    "Ansiety": {
-        "Loneliness": 0.65,
-        "Happyness": 0.05,
-        "MonetaryProblems": 0.5,
-        "Agressiveness": 0.5,
-        "Confused": 0.35,
-        "Sadness":  0.6,
-        "Stressed": 0.95
+    "ansiety": {
+        "loneliness": 0.65,
+        "happiness": 0.05,
+        "monetaryproblems": 0.5,
+        "aggressiveness": 0.5,
+        "confused": 0.35,
+        "fear": 0.7,
+        "sadness":  0.6,
+        "stress": 0.95
     },
-    "Depression": {
-        "Loneliness": 0.6,
-        "Happyness": 0.01,
-        "MonetaryProblems": 0.75,
-        "Agressiveness": 0.35,
-        "Confused": 0.15,
-        "Sadness":  0.95,
-        "Stressed": 0.1
+    "depression": {
+        "loneliness": 0.6,
+        "happiness": 0.01,
+        "monetaryproblems": 0.75,
+        "aggressiveness": 0.35,
+        "confused": 0.15,
+        "fear": 0.35,
+        "sadness":  0.95,
+        "stress": 0.1
     },
-    "Esquizofrenia": {
-        "Loneliness": 0.1,
-        "Happyness": 0.05,
-        "MonetaryProblems": 0.1,
-        "Agressiveness": 0.85,
-        "Confused": 0.75,
-        "Sadness":  0.5,
-        "Stressed": 0.6
+    "esquizofrenia": {
+        "loneliness": 0.1,
+        "happiness": 0.05,
+        "monetaryproblems": 0.1,
+        "aggressiveness": 0.85,
+        "confused": 0.75,
+        "fear": 0.6,
+        "sadness":  0.5,
+        "stress": 0.6
     },
-    "Panico": {
-        "Loneliness": 0.55,
-        "Happyness": 0.01,
-        "MonetaryProblems": 0.25,
-        "Agressiveness": 0.3,
-        "Confused": 0.75,
-        "Sadness":  0.5,
-        "Stressed": 0.85
+    "panico": {
+        "loneliness": 0.55,
+        "happiness": 0.01,
+        "monetaryproblems": 0.25,
+        "aggressiveness": 0.3,
+        "confused": 0.75,
+        "fear": 0.9,
+        "sadness":  0.5,
+        "stress": 0.85
     }
 }
 
 certaintyFactors = {
-    "Ansiety": {
-        "Loneliness": 0.65,
-        "Happyness": -0.85,
-        "MonetaryProblems": 0.5,
-        "Agressiveness": 0.3,
-        "Confused": -0.35,
-        "Sadness":  0.6,
-        "Stressed": 0.95
+    "ansiety": {
+        "loneliness": 0.65,
+        "happiness": -0.85,
+        "monetaryproblems": 0.5,
+        "aggressiveness": 0.3,
+        "confused": -0.35,
+        "fear": 0.7,
+        "sadness":  0.6,
+        "stress": 0.95
     },
-    "Depression": {
-        "Loneliness": 0.6,
-        "Happyness": -0.95,
-        "MonetaryProblems": 0.75,
-        "Agressiveness": -0.3,
-        "Confused": -0.4,
-        "Sadness":  0.95,
-        "Stressed": 0.5
+    "depression": {
+        "loneliness": 0.6,
+        "happiness": -0.95,
+        "monetaryproblems": 0.75,
+        "aggressiveness": -0.3,
+        "confused": -0.4,
+        "fear": 0.3,
+        "sadness":  0.95,
+        "stress": 0.5
     },
-    "Esquizofrenia": {
-        "Loneliness": -0.7,
-        "Happyness": -0.85,
-        "MonetaryProblems": -0.8,
-        "Agressiveness": 0.9,
-        "Confused": 0.75,
-        "Sadness":  0.5,
-        "Stressed": 0.6
+    "esquizofrenia": {
+        "loneliness": -0.7,
+        "happiness": -0.85,
+        "monetaryproblems": -0.8,
+        "aggressiveness": 0.9,
+        "confused": 0.75,
+        "fear": 0.6,
+        "sadness":  0.5,
+        "stress": 0.6
     },
-    "Panico": {
-        "Loneliness": 0.6,
-        "Happyness": -0.95,
-        "MonetaryProblems": -0.2,
-        "Agressiveness": -0.3,
-        "Confused": 0.85,
-        "Sadness":  0.5,
-        "Stressed": 0.85
+    "panico": {
+        "loneliness": 0.6,
+        "happiness": -0.95,
+        "monetaryproblems": -0.2,
+        "aggressiveness": -0.3,
+        "confused": 0.75,
+        "fear": 0.95,
+        "sadness":  0.5,
+        "stress": 0.75
     }
 }
 
@@ -108,9 +116,10 @@ def calcularConditionalProbability(listKeys, probs, sentiment):
 
     return actualProbability
 
-def calculateSentiment(dbManager, moods, person):
-    coefficients = dbManager.get_person_coefficients(res)
-    probs = {i: moods[i]/moods["Counter"] for i in moods if i != "Counter"}
+def calculateSentiment(dbManager, conversation_name, moods, person):
+    print(moods)
+    coefficients = dbManager.get_person_coefficients(conversation_name)
+    probs = {i: moods[i]/moods["counter"] for i in moods if i != "counter"}
     
     for sentiment in coefficients:
         listKeys = certaintyFactors[sentiment].keys()
@@ -119,4 +128,4 @@ def calculateSentiment(dbManager, moods, person):
         coefficients[sentiment] = calcularCertaintyFactor(listKeys, probs, sentiment)
         print("CERTAINTY FACTOR: ", coefficients[sentiment])
 
-    
+    dbManager.update_person_coefficients(conversation_name, moods)

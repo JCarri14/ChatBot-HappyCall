@@ -1,0 +1,97 @@
+{% extends "chat/base.html" %}
+{% load static %}
+{% block head %}
+    <link rel="stylesheet" href="{% static 'chat/css/board-styles.css' %}" type="text/css" media="screen">
+{% endblock %}
+{% block content %}
+    <div class="container board-container">
+        <div class="row vh-100">
+          <div class="col-12 col-sessions col-xl-6 my-auto">
+            <div class="card">
+              <div class="card-header row text-center">
+                <h3 class="col-12 col-sm-9">Chatbot Sessions</h3>
+                <button id="refresh-btn" class="col-12 col-sm-3">Refresh</button>
+              </div>
+              <div class="list-group">
+                  {% if conversations %}
+                    {% for c in conversations %}
+                        <p class="list-group-item list-group-item-action">{{c}}</p>
+                    {% endfor %}
+                  {% else %}
+                    <a href="#" class="list-group-item list-group-item-action">None</a>
+                  {% endif %}
+              </div>
+            </div>
+              
+          </div>
+          <div class="col-12 col-controls col-xl-6 my-auto">
+              <div class="row row-stats">
+                <div class="col-12 col-sm-4 col-item">
+                  <div class="card card-today text-center">
+                    <div class="card-body">
+                      <div class="card-title">
+                        <b>TODAY</b>
+                      </div>
+                      <div class="card-text">
+                        7
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4 col-item">
+                  <div class="card card-week text-center">
+                    <div class="card-body">
+                      <div class="card-title">
+                        <b>THIS MONTH</b>
+                      </div>
+                      <div class="card-text">
+                        40
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4 col-item">
+                  <div class="card  card-month text-center">
+                    <div class="card-body">
+                      <div class="card-title">
+                        <b>THIS MONTH</b>
+                      </div>
+                      <div class="card-text">
+                        150
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row mt-4 row-options">
+                <div class="col-12 col-sm-4 col-item">
+                  <div class="card pt-2 text-center">
+                    <!-- <div>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>-->
+                    <img src="{% static 'chat/assets/ic_stats.svg' %}" class="card-img-top" alt="ic_stats"/>
+                    <h6 class="card-title mt-2">ACCESS STATS</h3>
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4 col-item">
+                  <div class="card pt-2 text-center">
+                    <!-- Icons made by <a href="https://www.flaticon.com/authors/google" title="Google">Google</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a> -->
+                    <img src="{% static 'chat/assets/ic_location.svg' %}" class="card-img-top" alt="ic_stats"/>
+                    <h6 class="card-title mt-2">LOCATION STATS</h3>
+                  </div>
+                </div>
+                <div class="col-12 col-sm-4 col-item">
+                  <div class="card pt-2 text-center">
+                    <!-- Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a> -->
+                    <img src="{% static 'chat/assets/ic_docs.svg' %}" class="card-img-top" alt="ic_stats"/>
+                    <h6 class="card-title mt-2">CONVERSATION STATS</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="row mt-4 row-extra">
+              </div>
+          </div>
+        </div>
+    </div>
+{% endblock content %}
+{% block scripts %}
+    <script src="{% static 'chat/js/dashboard.js' %}"></script>
+{% endblock scripts %}

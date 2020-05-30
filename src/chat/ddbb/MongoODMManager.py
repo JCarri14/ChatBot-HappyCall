@@ -74,9 +74,7 @@ class MongoODMManager:
         p = c.emergency.pers_involved[0]
         p.healthContext.disorders = moods
         Person.objects.raw({"_id": p._id}).update(
-            {'$set': {'healthContext.disorders': moods}}) 
-        """Emergency.objects.raw({"_id": eID}).update(
-            {'$set': {'pers_involved': e.pers_involved}}) """       
+            {'$set': {'healthContext.disorders': moods}})       
     
     def get_person_coefficients(self, conversation_name):
         c = Conversation.objects.raw({'name': conversation_name})[0]

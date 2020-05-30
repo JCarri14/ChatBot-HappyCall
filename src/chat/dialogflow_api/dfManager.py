@@ -31,6 +31,9 @@ class DialogflowManager:
         for c in contexts:
             self.contexts_client.create_context(self.context_parent, c)
 
+    def delete_context(self, context):
+        self.contexts_client.delete_context(self.context_parent, context)
+
     def request_fulfillment_text(self, text):
         res = ""
         if text:

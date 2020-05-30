@@ -28,10 +28,8 @@ class MongoODMManager:
     
     def add_message(self, conversation_name, sender, text):
         c = Conversation.objects.raw({'name': conversation_name})[0]
-        m = ChatMessage(sender=sender, text=text)
-        c.messages.append(m)
         Conversation.objects.raw({'name': conversation_name}).update(
-            {'$set': {'messages': c.messages}})
+            {'$push': {'messages': { '$each': [ {"text": text, "sender": sender} ]}}})
 
     ########################## LINKERS ##########################
 

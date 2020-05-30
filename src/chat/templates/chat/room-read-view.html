@@ -1,14 +1,13 @@
 {% extends "chat/base.html" %}
 {% load static %}
 {% block head %}
-    <link rel="stylesheet" href="{% static 'chat/css/board-styles.css' %}" type="text/css" media="screen">
-    <link rel="stylesheet" href="{% static 'chat/css/chat-styles.css' %}" type="text/css" media="screen">
+    <link rel="stylesheet" href="{% static 'chat/css/chat-read-styles.css' %}" type="text/css" media="screen">
 {% endblock %}
 {% block content %}
     {{ room_name|json_script:"room-name" }}
     <div class="container">
-        <div class="row vh-100">
-            <div class="col col-xl-6 col-chat">
+        <div class="row inner-container vh-100">
+            <div class="col-12 col-xl-6 col-chat">
                 <div class="chat-box">
                     <div class="chat-messages mb-2">
                         {% if messages %}
@@ -24,7 +23,52 @@
                     </div>
                 </div>   
             </div>
-            <div class="col col-xl-6 col-data">  
+            <div class="col col-xl-6 col-data">
+                <div class="data-box">
+                    <h2 class="text-center mb-4">On live Information</h2>
+                    <div class="data-block mb-4">
+                        <h4>Conversation</h4>
+                        <ul class="list-group">
+                            <li class="list-group-item">Name: &nbsp;<b id="conv_name">{{data}}</b></li>
+                            <li class="list-group-item">Created at: &nbsp;<b id="conv_date">{{data}}</b></li>
+                        </ul>
+                    </div>
+                    <div class="data-block mb-4">
+                        <h4>Witness</h4>
+                        <ul class="list-group">
+                            <li class="list-group-item">Name: &nbsp;<b id="witness_name">{{data}}</b></li>
+                            <li class="list-group-item">Role: &nbsp;<b id="witness_role">{{data}}</b></li>
+                            <li class="list-group-item">Age: &nbsp;<b id="witness_age">{{data}}</b></li>
+                            <li class="list-group-item">Gender: &nbsp;<b id="witness_gender">{{data}}</b></li>
+                            <li class="list-group-item">Disorders: &nbsp;<b id="witness_disorders">{{data}}</b></li>
+                            <li class="list-group-item">Injuries: &nbsp;<b id="witness_injuries">{{data}}</b></li>
+                        </ul>
+                    </div>
+                    <div class="data-block mb-4">
+                        <h4>Emergency</h4>
+                        <ul class="list-group">
+                            <li class="list-group-item">Type: &nbsp;<b id="e_type">{{data}}</b></li>
+                            <li class="list-group-item">Location: &nbsp;<b id="e_location">{{data}}</b></li>
+                            <li class="list-group-item">Persons involved: &nbsp;<b id="e_pers_involved">{{data}}</b></li>
+                            <li class="list-group-item">Is Active: &nbsp;<b id="e_active">{{data}}</b></li>
+                        </ul>
+                    </div>
+                    <div class="data-block mb-4">
+                        <h4>Victim</h4>
+                        <ul class="list-group">
+                            <li class="list-group-item">Name: &nbsp;<b id="victim_name">{{data}}</b></li>
+                            <li class="list-group-item">Status: &nbsp;<b id="victim_status">{{data}}</b></li>
+                            <li class="list-group-item">Description: &nbsp;<b id="victim_description">{{data}}</b></li>
+                        </ul>
+                    </div>
+                    <div class="data-block mb-4">
+                        <h4>Aggressor</h4>
+                        <ul class="list-group">
+                            <li class="list-group-item">Name: &nbsp;<b id="victim_name">{{data}}</b></li>
+                            <li class="list-group-item">Description: &nbsp;<b id="victim_description">{{data}}</b></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

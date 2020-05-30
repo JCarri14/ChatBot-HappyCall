@@ -103,6 +103,7 @@ def calcularCertaintyFactor(listKeys, probs, sentiment):
         else:
             actualCoefficient = (probabilityX + probabilityY) / (1 - min([abs(probabilityX), abs(probabilityY)]))
     return actualCoefficient
+
 """
 def calcularConditionalProbability(listKeys, probs, sentiment):
     actualProbability = 0
@@ -117,9 +118,10 @@ def calcularConditionalProbability(listKeys, probs, sentiment):
 
     return actualProbability
 """
+
 def calculateSentiment(dbManager, conversation_name, moods, person):
     print(moods)
-    coefficients = dbManager.get_person_coefficients(conversation_name)
+    coefficients = dbManager.get_witness_coefficients(conversation_name)
     probs = {i: moods[i]/moods["counter"] for i in moods if i != "counter"}
     
     for sentiment in coefficients:
@@ -129,4 +131,4 @@ def calculateSentiment(dbManager, conversation_name, moods, person):
         coefficients[sentiment] = calcularCertaintyFactor(listKeys, probs, sentiment)
         print("CERTAINTY FACTOR: ", coefficients[sentiment])
 
-    dbManager.update_person_coefficients(conversation_name, coefficients)
+    dbManager.update_witness_coefficients(conversation_name, coefficients)

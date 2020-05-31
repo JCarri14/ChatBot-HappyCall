@@ -52,25 +52,22 @@ class HealthContext(EmbeddedMongoModel):
     isPhysicallyHurt = fields.BooleanField(default=False)
     injuries = fields.ListField(fields.CharField())
     disorders = fields.DictField()
-    #fields.IntegerField(min_value=0, default=0)
 
 class Person(MongoModel):
     name = fields.CharField()
     role = fields.CharField()
     gender = fields.CharField()    
     age = fields.IntegerField(min_value=0)
-    description = fields.CharField()
+    description = fields.ListField(fields.CharField())
+    preferences = fields.ListField(fields.CharField())
+    dislikes = fields.ListField(fields.CharField())
+    aggressions = fields.ListField(fields.CharField())
     healthContext = fields.EmbeddedDocumentField(HealthContext)
     sentimentCoefficients = fields.DictField()
-    #fields.FloatField(min_value=0, max_value=100, default=0)
-
-class EmergencyContext(EmbeddedMongoModel):
-    address = fields.CharField()
-    place = fields.CharField()
 
 class Emergency(MongoModel):
     etype = fields.CharField()
-    context = fields.EmbeddedDocumentField(EmergencyContext)
+    location = fields.ListField(fields.CharField())
     num_involved = fields.IntegerField(min_value=0)
     pers_involved = fields.ListField(fields.ReferenceField(Person))
     is_active = fields.BooleanField(default=True)
@@ -82,8 +79,3 @@ class Conversation(MongoModel):
     messages = fields.EmbeddedDocumentListField(ChatMessage)
     witness = fields.ReferenceField(Person)
     emergencies = fields.ListField(fields.ReferenceField(Emergency))
-
-
-
-
-

@@ -184,20 +184,37 @@ class ProtocolController:
         return result
     
     def restoreProtocolContext(self):
-        words = re.compile('protocolCompleted')
-        
+        wordProtocol = re.compile('protocolCompleted')
+        wordHealth = re.compile('healthCompleted')
+        flagProtocol = 0
+        flagHealth = None
+
         for context in self.instance.contexts:
-            if words.search(context.name):
+            if wordProtocol.search(context.name):
                 self.instance.dfManager.delete_context(context)
-                return
+                flagProtocol = 1
+            if wordHealth.search(context.name):
+                flagHealth = context
+        
+        if flagProtocol == 1 and flagHealth != None:
+            self.instance.dfManager.delete_context(flagHealth)
+                
     
     def restoreHealthContext(self):
-        words = re.compile('healthCompleted')
-        
+        wordProtocol = re.compile('protocolCompleted')
+        wordHealth = re.compile('healthCompleted')
+        flagProtocol = None
+        flagHealth = 0
+
         for context in self.instance.contexts:
-            if words.search(context.name):
+            if wordProtocol.search(context.name):
+                flagProtocol = context
+            if wordHealth.search(context.name):
                 self.instance.dfManager.delete_context(context)
-                return
+                flagHealth = 1
+        
+        if flagProtocol != None and flagHealth == 1:
+            self.instance.dfManager.delete_context(flagProtocol)
 
 
     

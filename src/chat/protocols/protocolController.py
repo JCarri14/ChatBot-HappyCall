@@ -107,7 +107,7 @@ class ProtocolController:
         p_name = checkPersonName(params)
         p = Person(name=p_name)
         self.instance.session['emergency'].pers_involved.append(p)
-        restoreProtocolContext()
+        self.restoreProtocolContext()
         return result
 
     def agressionIdentificationWithout(self, input, params, result):
@@ -129,18 +129,18 @@ class ProtocolController:
         return result
 
     def bleedingBase(self, input, params, result):
-        restoreHealthContext()
+        self.restoreHealthContext()
         return result
     
     def criticalHealth(self, input, params, result):
         return result
     
     def faintingBase(self, input, params, result):
-        restoreHealthContext()
+        self.restoreHealthContext()
         return result
     
     def woundBase(self, input, params, result):
-        restoreHealthContext()
+        self.restoreHealthContext()
         return result
 
     def moodSentences(self, input, params, result):

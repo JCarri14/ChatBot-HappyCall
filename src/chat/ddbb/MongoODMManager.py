@@ -57,7 +57,7 @@ class MongoODMManager:
         return Conversation.objects.all()
 
     def get_conversation_by_name(self, conversation_name):
-        c = Conversation.objects.raw({'name': conversation_name})[0]
+        c = list(Conversation.objects.raw({'name': conversation_name}))[0]
         return c
     
     def get_conversation_messages(self, conversation_name):

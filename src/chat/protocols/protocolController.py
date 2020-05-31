@@ -16,20 +16,24 @@ class ProtocolController:
         def __init__(self, project_id, session_id):
             self.dfManager =  DialogflowManager(project_id, session_id, "es")
             self.dbManager = MongoODMManager("localhost", "27017", "happy_call")
+            self.session_id = session_id
             self.session = {
-                "conversation": Conversation(name=session_id),
-                "emergency": Emergency(etype=EmergencyTypes.Normal),
-                "witness": defaultPerson()
+                "conversation": 0,
+                "emergencies": [],
+                "witness": 0,
+                "curr_emergency": 0
             }
             self.save_initial_session_values()
             self.contexts = list(self.dfManager.get_contexts())
         
         def save_initial_session_values(self):
-            pId = self.dbManager.insert_person(self.session['witness'])
-            eId = self.dbManager.insert_emergency(self.session['emergency'])
-            self.session['conversation'].witness = pId
-            self.session['conversation'].emergencies.append(eId)
-            self.dbManager.insert_conversation(self.session['conversation']) 
+            conversation = Conversation(name=session_id, messages=[])
+            self.session['witness'] = self.dbManager.insert_person(defaultPerson())
+            self.session['curr_emergency'] = self.dbManager.insert_emergency(defaultEmergency())
+            conversation.witness = self.session['witness']
+            conversation.emergencies.append(self.session['emergency'])
+            self.session['curr_emergency'] = self.dbManager.insert_conversation(conversation)
+            self.session['emergencies'].append(self.session['curr_emergency'])
 
     instance = None
 
@@ -42,18 +46,23 @@ class ProtocolController:
             self.instance.session['conversation'].finished_at = datetime.datetime.utcnow
             return ""
         else:
-            self.instance.dbManager.add_message(self.instance.session['conversation'].name, "user-mssg", text)
+            #Saving input message into de ddbb
+            self.instance.dbManager.add_message(self.instance.session['conversation'], "user-mssg", text)
+            # Asking for Dialogflow response
             info = self.instance.dfManager.request_fulfillment_text(text)
+            # Checking for any mood information given by Dialogflow response
             res, flag = self.checkMoodInfo(info['params'])
             if flag == 1:
-                self.instance.dbManager.update_witness_moods(self.instance.session['conversation'].name, res)
-                calculateSentiment(self.instance.dbManager, self.instance.session['conversation'].name, res, "")
+                self.instance.dbManager.update_witness_moods(self.instance.session['conversation'], res)
+                calculateSentiment(self.instance.dbManager, self.instance.session['conversation'], res, "")
+            # Regarding the intent we're currently dealing with, we need to check for wanted parameters
             text_response = self.handle_intent(text, info)
-            self.instance.dbManager.add_message(self.instance.session['conversation'].name, "bot-mssg", text_response)
+            #Saving response message into de ddbb
+            self.instance.dbManager.add_message(self.instance.session['conversation'], "bot-mssg", text_response)
             return text_response
 
     def checkMoodInfo(self, params):
-        moods = self.instance.dbManager.get_witness_moods(self.instance.session['conversation'].name)
+        moods = self.instance.dbManager.get_witness_moods(self.instance.session['conversation'])
         flag = 0
         word = re.compile('mood_') 
         point = re.compile(".")
@@ -94,12 +103,14 @@ class ProtocolController:
         return response
      
     def agressionWithVictim(self, input, params, result):
+        #Checking for number of victims
         numPersons = checkPersonsQuantity(params)
-        p_name = checkPersonName(params)
+        #Checking for victim name/identification
+        p_name = checkPersonName(params) 
         p = Person(name=p_name)
         self.instance.session['emergency'].pers_involved.append(p)
         restoreProtocolContext()
-        #self.instance.dbManager.update_emergencies_persons(self.instance.session['emergency'].etype,self.instance.session['emergency'].pers_involved)
+        self.instance.dbManager.update_emergency_persons(self.instance.session['conversation'],self.instance.session['emergency'].pers_involved)
         return result
 
     def agressionWithoutVictim(self, input, params, result):
@@ -148,6 +159,9 @@ class ProtocolController:
         return result
     
     def getPreferences(self, input, params, result):
+        pref = checkPersonPreferences(params)
+        if (pref):
+            self.instance.dbManager.update_witness_preferences(self.instance.session['conversation'], pref)
         result = self.handle_multiple_contexts(result)
         return result
     
@@ -199,7 +213,6 @@ class ProtocolController:
         if flagProtocol == 1 and flagHealth != None:
             self.instance.dfManager.delete_context(flagHealth)
                 
-    
     def restoreHealthContext(self):
         wordProtocol = re.compile('protocolCompleted')
         wordHealth = re.compile('healthCompleted')

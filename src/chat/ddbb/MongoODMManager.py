@@ -31,11 +31,11 @@ class MongoODMManager:
         Conversation.objects.raw({'_id': conversation_id}).update(
             {'$push': {'messages': { '$each': [ {"text": text, "sender": sender} ]}}})
     
-    def add_location(self, conversation_id, emergency_type, location):
+    def add_locations(self, conversation_id, emergency_type, locations):
         c = Conversation.objects.raw({'_id': conversation_id})[0]
         e = self.get_emergency_from_conversation(c.emergencies, emergency_type)
         Emergency.objects.raw({'_id': e._id}).update(
-            {'$push': {'location': { '$each': [ location ]}}})
+            {'$push': {'location': { '$each': [ locations ]}}})
 
     ########################## LINKERS ##########################
 

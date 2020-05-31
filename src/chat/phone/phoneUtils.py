@@ -1,4 +1,18 @@
 from twilio.rest import Client
+import smtplib #IMPORTANT: Not installed
+
+SERVER_EMAIL = 'eltelefonodelaalegria@gmail.com'
+SERVER_PASSW = 'perniamola'
+
+def notify_emergency_services(text_to_send, email_receiver):
+    mensajeAEnviar = 'Hola, una de nuestros clientes esta entrando en pánico, por favor contacten con el lo mas rapido posible. Condemor, pecadores!!!!'
+    asunto = 'URGENTE: Persona en peligro'
+    servidor = smtplib.SMTP('smtp.gmail.com', 587)
+    servidor.starttls()
+    servidor.login(SERVER_EMAIL, SERVER_PASSW)
+    email = 'Subject: {}\n\n{}'.format(asunto, mensajeAEnviar).encode('utf-8')
+    servidor.sendmail(SERVER_EMAIL, email_receiver, email)
+    servidor.quit()
 
 def call_emergency_services():
     # Llamamos a alguien

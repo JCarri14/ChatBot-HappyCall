@@ -45,7 +45,7 @@ def checkParameters(search, params):
                 result.append(params[param])
     return result
 
-def defaultPerson():
+def defaultPerson(name="Person", role=Roles.Transmitter.value):
     disorders = {}
     for m in (Moods):
         disorders[m.value] = 0
@@ -54,9 +54,8 @@ def defaultPerson():
     coefficients = {}
     for c in (Coefficients):
         coefficients[c.value] = 0.0
-    return Person(role=Roles.Transmitter,
-            healthContext = healthContext,
-            sentimentCoefficients = coefficients)
+    return Person(role=role, name = name, healthContext = healthContext,
+                sentimentCoefficients = coefficients)
     
 def defaultEmergency():
     return Emergency(etype=EmergencyTypes.Normal, 

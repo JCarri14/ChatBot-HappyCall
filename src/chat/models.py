@@ -59,6 +59,7 @@ class Person(MongoModel):
     role = fields.CharField()
     gender = fields.CharField()    
     age = fields.IntegerField(min_value=0)
+    description = fields.CharField()
     healthContext = fields.EmbeddedDocumentField(HealthContext)
     sentimentCoefficients = fields.DictField()
     #fields.FloatField(min_value=0, max_value=100, default=0)

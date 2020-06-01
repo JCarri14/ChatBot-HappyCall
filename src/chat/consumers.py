@@ -134,7 +134,6 @@ class ReadOnlyChatConsumer(WebsocketConsumer):
         conversation = []
         data = {}
         conversation = self.dbManager.get_conversation_by_name(self.room_group_name)
-        print(conversation)
         data = self.treat_information(conversation)
         
         for m in event['message']:

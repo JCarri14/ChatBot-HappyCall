@@ -27,8 +27,14 @@ def checkPersonDescription(params):
 def checkPersonName(params):
     return checkParameters(["UndefinedPerson", "undefinedperson", "person.original", "Person.original"], params)
 
+def checkPersonName2(params):
+    return checkParameters(["UndefinedPerson1", "undefinedperson1", "person.original", "Person.original"], params)
+
 def checkPersonsQuantity(params):
     return checkParameters(["UndefinedPerson", "undefinedperson", "number", "Number"], params)
+
+def checkPersonsQuantity2(params):
+    return checkParameters(["UndefinedPerson1", "undefinedperson1", "number", "Number"], params)
 
 # -------------------------------------------------------------- #
 

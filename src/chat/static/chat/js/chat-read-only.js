@@ -53,7 +53,7 @@ function createItem(parentName, name, value) {
     item.classList.add("list-group-item");
 
     var itemValue = document.createElement("b");
-    itemValue.setAttribute("id", parentName + "_" + name);
+    itemValue.setAttribute("id", parentName + "_" + name.toLowerCase());
     itemValue.appendChild(document.createTextNode(value));
     item.appendChild(document.createTextNode(name + ": "));
     item.appendChild(itemValue);
@@ -78,7 +78,7 @@ function createBlock(title, content) {
     var block = document.createElement("div");
     block.classList.add("data-block");
     block.classList.add("mb-4");
-    block.setAttribute("id", title);
+    block.setAttribute("id", title.toLowerCase());
 
     var blockTitle = document.createElement("h4");
     blockTitle.appendChild(document.createTextNode(toCapitalCase(title)));
@@ -107,12 +107,13 @@ function update_block(key, values) {
     for (v in values) {
         if (Array.isArray(values[v])) {
             for (i in values[v]) {
-                document.getElementById(key+"_"+v).innerHTML = " ";
-                document.getElementById(key+"_"+v).innerHTML += values[value][i] + "<br>";
+                document.getElementById(key+"_"+v).value = '';
+                document.getElementById(key+"_"+v).innerHTML += values[v][i] + "<br>";
             }
         } else {
-            document.getElementById(key+"_"+v).innerHTML = " ";
-            doument.getElementById(key+"_"+v).innerHTML = values[value];
+            console.log(key);
+            document.getElementById(key+"_"+v).value = '';
+            document.getElementById(key+"_"+v).innerHTML = values[v];
         }
     }
 }

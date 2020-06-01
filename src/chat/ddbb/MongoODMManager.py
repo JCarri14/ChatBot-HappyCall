@@ -20,7 +20,7 @@ class MongoODMManager:
     
     def insert_emergency(self, emergency):
         e = emergency.save()
-        return e._id
+        return {"id": e._id, "type": e.etype, "quantity_found": False}
     
     def insert_person(self, person):
         p = person.save()
@@ -31,11 +31,14 @@ class MongoODMManager:
         Conversation.objects.raw({'name': conversation_name}).update(
             {'$push': {'messages': { '$each': [ {"text": text, "sender": sender} ]}}})
     
-    def add_location(self, conversation_name, emergency_id, location):
-        c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+    def add_location(self, emergency_id, location):
         Emergency.objects.raw({'_id': emergency_id}).update(
             {'$push': {'location': { '$each': [ location ]}}})
+
+    def add_emergency(self, conversation_name, emergency_id):
+        c = Conversation.objects.raw({'name': conversation_name})[0]
+        Conversation.objects.raw({'name': conversation_name}).update(
+            {'$addToSet': {'emergencies': emergency_id}})
 
     ########################## LINKERS ##########################
 
@@ -94,19 +97,19 @@ class MongoODMManager:
         res = Emergency.objects.raw({'etype': type})
         return res
     
-    def get_victims(self, conversation_name, emergency_id):
-        e = Emergency.objects.raw({'etype': type})[0]
+    def get_victims(self, emergency_id):
+        e = Emergency.objects.raw({'_id': emergency_id})[0]
         return e.pers_involved
 
-    def get_person_moods(self, conversation_name, emergency_id, role):
+    def get_person_moods(self, conversation_name, role):
         c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+        e = c.curr_emergency
         p = self.get_person_from_emergency(e.pers_involved, role)
         return p.healthContext.disorders
     
-    def get_person_coefficients(self, conversation_name, emergency_id, role):
+    def get_person_coefficients(self, conversation_name, role):
         c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+        e = c.curr_emergency
         p = self.get_person_from_emergency(e.pers_involved, role)
         return p.sentimentCoefficients
     
@@ -124,11 +127,21 @@ class MongoODMManager:
         
     ########################## UPDATES ##########################
 
+    def update_current_emergency(self, conversation_name, emergency_id):
+        Conversation.objects.raw({'name': conversation_name}).update(
+            {'$set': {'curr_emergency': emergency_id}})
+
     def update_witness_name(self, conversation_name, name):
         c = Conversation.objects.raw({'name': conversation_name})[0]
         p = c.witness
         Person.objects.raw({"_id": p._id}).update(
             {'$set': {'name': name}})
+    
+    def update_witness_role(self, conversation_name, role):
+        c = Conversation.objects.raw({'name': conversation_name})[0]
+        p = c.witness
+        Person.objects.raw({"_id": p._id}).update(
+            {'$set': {'role': role}})
 
     def update_witness_moods(self, conversation_name, moods):
         c = Conversation.objects.raw({'name': conversation_name})[0]
@@ -178,25 +191,17 @@ class MongoODMManager:
         Person.objects.raw({'_id': p._id}).update(
             {'$push': {'healthContext.aggressions': { '$each': aggressions}}})
 
-    def update_emergency_type(self, conversation_name, new_type):
-        #c = Conversation.objects.raw({'name': conversation_name})[0]
-        #e = self.get_emergency_from_conversation(c.emergencies, EmergencyTypes.Normal.value)
-        Emergency.objects.raw({'_id': emergency_id}).update(
-            {'$set': {'etype': new_type}})
-
-    def update_emergency_type(self, conversation_name, emergency_id, new_type):
+    def update_emergency_type(self, emergency_id, new_type):
         #c = Conversation.objects.raw({'name': conversation_name})[0]
         #e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
         Emergency.objects.raw({'_id': emergency_id}).update(
             {'$set': {'etype': new_type}})
 
-    def update_emergency_persons(self, conversation_name, emergency_id, persons_ids):
-        #c = Conversation.objects.raw({'name': conversation_name})[0]
-        #e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+    def update_emergency_persons(self, emergency_id, persons_ids):
         Emergency.objects.raw({'_id': emergency_id}).update(
             {'$push': {'pers_involved': { '$each': persons_ids}}})
     
-    def update_emergency_num_persons(self, conversation_name, emergency_id, num):
+    def update_emergency_num_persons(self, emergency_id, num):
         e = Emergency.objects.raw({"_id": emergency_id})[0]
         if not e.num_involved:
             e.num_involved = 0
@@ -204,58 +209,50 @@ class MongoODMManager:
         Emergency.objects.raw({"_id": e._id}).update(
                     {'$set': {'num_involved': e.num_involved}}) 
 
-    def update_person_moods(self, conversation_name, emergency_id, role, moods):
-        c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+    def update_person_moods(self, emergency_id, role, moods):
+        e = Emergency.objects.raw({"_id": emergency_id})[0]
         p = self.get_person_from_emergency(e.pers_involved, role)
         Person.objects.raw({"_id": p._id}).update(
             {'$set': {'healthContext.disorders': moods}})       
     
-    def update_person_coefficients(self, conversation_name, emergency_id, role, coefficients):
-        c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+    def update_person_coefficients(self, emergency_id, role, coefficients):
+        e = Emergency.objects.raw({"_id": emergency_id})[0]
         p = self.get_person_from_emergency(e.pers_involved, role)
         Person.objects.raw({"_id": p._id}).update(
             {'$set': {'sentimentCoefficients': coefficients}})  
 
-    def update_person_description(self, conversation_name, emergency_id, role, descriptions):
-        c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+    def update_person_description(self, emergency_id, role, descriptions):
+        e = Emergency.objects.raw({"_id": emergency_id})[0]
         p = self.get_person_from_emergency(e.pers_involved, role)
         Person.objects.raw({'_id': p._id}).update(
             {'$push': {'description': { '$each': descriptions}}})
     
-    def update_person_preferences(self, conversation_name, emergency_id, role, preferences):
-        c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+    def update_person_preferences(self, emergency_id, role, preferences):
+        e = Emergency.objects.raw({"_id": emergency_id})[0]
         p = self.get_person_from_emergency(e.pers_involved, role)
         Person.objects.raw({'_id': p._id}).update(
             {'$push': {'preferences': { '$each': preferences}}})
     
-    def update_person_dislikes(self, conversation_name, emergency_id, role, dislikes):
-        c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+    def update_person_dislikes(self, emergency_id, role, dislikes):
+        e = Emergency.objects.raw({"_id": emergency_id})[0]
         p = self.get_person_from_emergency(e.pers_involved, role)
         Person.objects.raw({'_id': p._id}).update(
             {'$push': {'dislikes': { '$each': dislikes}}})
     
-    def update_person_aggressions(self, conversation_name, emergency_id, role, aggressions):
-        c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+    def update_person_aggressions(self, emergency_id, role, aggressions):
+        e = Emergency.objects.raw({"_id": emergency_id})[0]
         p = self.get_person_from_emergency(e.pers_involved, role)
         Person.objects.raw({'_id': p._id}).update(
             {'$push': {'healthContext.aggressions': { '$each': aggressions}}}) 
 
-    def update_person_disorders(self, conversation_name, emergency_id, role, disorders):
-        c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+    def update_person_disorders(self, emergency_id, role, disorders):
+        e = Emergency.objects.raw({"_id": emergency_id})[0]
         p = self.get_person_from_emergency(e.pers_involved, role)
         Person.objects.raw({'_id': p._id}).update(
             {'$push': {'healthContext.disorders': { '$each': disorders}}})
 
-    def update_person_injuries(self, conversation_name, emergency_id, role, injuries):
-        c = Conversation.objects.raw({'name': conversation_name})[0]
-        e = self.get_emergency_from_conversation(c.emergencies, emergency_id)
+    def update_person_injuries(self, emergency_id, role, injuries):
+        e = Emergency.objects.raw({"_id": emergency_id})[0]
         p = self.get_person_from_emergency(e.pers_involved, role)
         Person.objects.raw({'_id': p._id}).update(
             {'$push': {'healthContext.injuries': { '$each': injuries}}})        

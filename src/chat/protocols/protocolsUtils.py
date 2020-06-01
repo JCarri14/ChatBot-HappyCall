@@ -3,8 +3,6 @@ import re
 
 #params.get(param)
 
-
-
 def checkEmergencyLocation(params):
     return checkParameters(["number", "address.original", "location.original", "Location.original", "EmergencyLocation.original", "emergencylocation.original"], params)
 
@@ -20,25 +18,30 @@ def checkAggresionInstrument(params):
 def checkHealthProblem(params):
     return checkParameters(["HealthProblem.original"], params)
 
-def checkUndefinedPerson(params):
-    return checkParameters(["UndefinedPerson.original, undefinedperson.original"], params)
-
 def checkPersonPreferences(params):
     return checkParameters(["UserPreference.original", "userpreference.original"], params)
 
 def checkPersonDescription(params):
     return checkParameters(["persondescription.original", "personDescription.original", "PersonDescription.original"], params)
 
-def checkUndefinedPersonName(params):
-    return checkParameters(["person.original"], params)
-
 def checkPersonName(params):
-    return checkParameters(["person.original"], params)
+    return checkParameters(["UndefinedPerson.original", "undefinedperson.original", "person.original", "Person.original"], params)
 
 def checkPersonsQuantity(params):
-    return checkParameters(["number", "Number"], params)
+    return checkParameters(["UndefinedPerson.original", "undefinedperson.original", "number", "Number"], params)
 
 # -------------------------------------------------------------- #
+
+def loopDictParameters(result, search, params):
+    expr = re.compile("|".join(search))
+    for param in params:
+        if expr.search(param):
+            if isinstance(params[param], list):
+                if len(params[param]) > 0:
+                    result.extend(params[param])
+            elif params.get(param):
+                result.append(params[param])
+    return result
 
 #Append: add list as value in the other one
 #Extend: add values to the corresponding list
@@ -46,11 +49,14 @@ def checkParameters(search, params):
     result = []
     for param in params:
         if param in search:
-            if isinstance(params[param], list):
-                if len(params[param]) > 0:
-                    result.extend(params[param])
-            elif params.get(param):
-                result.append(params[param])
+            if isinstance(params[param], dict):
+                result = loopDictParameters(result, search, params[param])
+            else:
+                if isinstance(params[param], list):
+                    if len(params[param]) > 0:
+                        result.extend(params[param])
+                elif params.get(param):
+                    result.append(params[param])
     return result
 
 def checkIfWitnessProblem(user_input):

@@ -29,29 +29,16 @@ class ChatConsumer(WebsocketConsumer):
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
         user_input = text_data_json['message']
+
+        # Send message to room group
+        self.send_message_to_all([{'sender': "user-mssg", 'text': user_input}])
+        
         project_id = os.getenv('DIALOGFLOW_PROJECT_ID')
         session_id = self.room_group_name
-        
         message = ProtocolController(project_id, session_id).handle_input(user_input) 
         
-        response = [
-            {
-            'sender': "user-mssg",
-            'text': user_input
-            },
-            {
-            'sender': "bot-mssg",
-            'text': message
-            },
-        ]
         # Send message to room group
-        async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': response
-            }
-        )
+        self.send_message_to_all([{'sender': "bot-mssg", 'text': message}])        
 
     # Receive message from room group
     def chat_message(self, event):
@@ -60,6 +47,15 @@ class ChatConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'message': message
         }))
+    
+    def send_message_to_all(self, text):
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name,
+            {
+                'type': "chat_message",
+                'message': text
+            }
+        )
 
 class DashboardConsumer(WebsocketConsumer):
     def connect(self):
@@ -106,9 +102,7 @@ class ReadOnlyChatConsumer(WebsocketConsumer):
     def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
-        self.data_send = 0
         self.dbManager = MongoODMManager("localhost", "27017", "happy_call")
-
     
         # Join room group
         async_to_sync(self.channel_layer.group_add)(
@@ -137,15 +131,11 @@ class ReadOnlyChatConsumer(WebsocketConsumer):
     # Receive message from room group
     def chat_message(self, event):
         # Send message to WebSocket
-        self.data_send += 1
         conversation = []
         data = {}
-        if self.data_send < 2:
-            conversation = self.dbManager.get_conversation_by_name(self.room_group_name)
-            print(conversation)
-            data = self.treat_information(conversation)
-        else:
-            self.data_send = 0
+        conversation = self.dbManager.get_conversation_by_name(self.room_group_name)
+        print(conversation)
+        data = self.treat_information(conversation)
         
         for m in event['message']:
             self.send(text_data=json.dumps({
@@ -173,32 +163,42 @@ class ReadOnlyChatConsumer(WebsocketConsumer):
         )
 
     def treat_information(self, conversation):
-        response = {}
-        response["conversation_name"] = conversation.name
-        response["conversation_date"] = conversation.created_at.isoformat()       
+        response = {
+            "conversation":{},
+            "witness":{},
+            "witness_sentiments":{},
+            "emergency":{},
+            "victim":{},
+            "aggressor": {}
+        }
+        response["conversation"]["name"] = conversation.name
+        response["conversation"]["date"] = conversation.created_at.isoformat()       
         if conversation.witness:
             person = conversation.witness
-            response["witness_name"] = person.name    
-            response["witness_role"] = person.role       
-            response["witness_age"] = person.age       
-            response["witness_gender"] = person.gender  
+            response["witness"]["name"] = person.name    
+            response["witness"]["role"] = person.role       
+            response["witness"]["description"] = person.description  
+            response["witness"]["preferences"] = person.preferences
+            response["witness"]["dislikes"] = person.dislikes    
             response["witness_sentiments"] = person.sentimentCoefficients
-            response["witness_injuries"] = person.healthContext.injuries                        
 
         if conversation.emergencies[0]:
             emergency = conversation.emergencies[0]
-            response["emergency_type"] = emergency.etype
-            response["emergency_location"] = emergency.context 
-            response["emergency_pers_involved"] = emergency.num_involved 
-            response["emergency_active"] = emergency.is_active
+            response["emergency"]["type"] = emergency.etype
+            response["emergency"]["location"] = emergency.location 
+            response["emergency"]["pers_involved"] = emergency.num_involved 
+            response["emergency"]["active"] = emergency.is_active
         
             if emergency.pers_involved:
                 for person in emergency.pers_involved:
                     if person.role == "Victim":
-                        response["victim_name"] = person.name
-                        response["victim_status"] = person.healthContext.status
-                        response["victim_description"] = person.description 
+                        response["victim"]["name"] = person.name
+                        response["victim"]["status"] = person.healthContext.status
+                        response["victim"]["description"] = person.description
+                        response["victim"]["aggressions"] = person.healthContext.aggressions  
+                        response["victim"]["injuries"] = person.healthContext.injuries 
+
                     elif person.role == "Aggressor":
-                        response["aggressor_name"] = person.name
-                        response["aggressor_description"] = person.description
+                        response["aggressor"]["name"] = person.name
+                        response["aggressor"]["description"] = person.description
         return response

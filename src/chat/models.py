@@ -50,6 +50,8 @@ class ChatMessage(EmbeddedMongoModel):
 class HealthContext(EmbeddedMongoModel):
     status = fields.CharField()
     isPhysicallyHurt = fields.BooleanField(default=False)
+    diseases = fields.ListField(fields.CharField())
+    aggressions = fields.ListField(fields.CharField())
     injuries = fields.ListField(fields.CharField())
     disorders = fields.DictField()
 
@@ -61,7 +63,6 @@ class Person(MongoModel):
     description = fields.ListField(fields.CharField())
     preferences = fields.ListField(fields.CharField())
     dislikes = fields.ListField(fields.CharField())
-    aggressions = fields.ListField(fields.CharField())
     healthContext = fields.EmbeddedDocumentField(HealthContext)
     sentimentCoefficients = fields.DictField()
 

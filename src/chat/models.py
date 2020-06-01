@@ -69,7 +69,8 @@ class Person(MongoModel):
 class Emergency(MongoModel):
     etype = fields.CharField()
     location = fields.ListField(fields.CharField())
-    num_involved = fields.IntegerField(min_value=0)
+    num_victims = fields.IntegerField(min_value=0)
+    num_aggressors = fields.IntegerField(min_value=0)
     pers_involved = fields.ListField(fields.ReferenceField(Person))
     is_active = fields.BooleanField(default=True)
 

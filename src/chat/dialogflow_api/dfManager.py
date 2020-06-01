@@ -55,7 +55,7 @@ class DialogflowManager:
         res['text'] = response.query_result.fulfillment_text
         res['intent'] = response.query_result.intent.display_name
         res['params'] = {}
-        values = ['_dialog_context',]
+        values = ['_dialog_context', '-followup']
         #'contexts/__system_counters__']
         word = re.compile("|".join(values))
 

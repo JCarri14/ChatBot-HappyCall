@@ -80,3 +80,4 @@ class Conversation(MongoModel):
     messages = fields.EmbeddedDocumentListField(ChatMessage)
     witness = fields.ReferenceField(Person)
     emergencies = fields.ListField(fields.ReferenceField(Emergency))
+    curr_emergency = fields.ReferenceField(Emergency)

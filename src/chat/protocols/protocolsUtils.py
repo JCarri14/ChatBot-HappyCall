@@ -3,6 +3,8 @@ import re
 
 #params.get(param)
 
+
+
 def checkEmergencyLocation(params):
     return checkParameters(["number", "address.original", "location.original", "Location.original", "EmergencyLocation.original", "emergencylocation.original"], params)
 
@@ -36,6 +38,8 @@ def checkPersonName(params):
 def checkPersonsQuantity(params):
     return checkParameters(["number", "Number"], params)
 
+# -------------------------------------------------------------- #
+
 #Append: add list as value in the other one
 #Extend: add values to the corresponding list
 def checkParameters(search, params):
@@ -50,7 +54,7 @@ def checkParameters(search, params):
     return result
 
 def checkIfWitnessProblem(user_input):
-    values = ["Me estoy", "Estoy perdiendo", "Tengo un", "Tengo una", "Estoy sangrando"
+    values = ["Me estoy", "Estoy perdiendo", "Tengo un", "Tengo una", "He sufrido", "Estoy sangrando"
                 "Llevo una hora sangrando", "Estoy sufriendo", "Me está", "Me han metido"]
     expr = re.compile("|".join(values))
     if expr.search(user_input):
@@ -69,6 +73,6 @@ def defaultPerson(name="Person", role=Roles.Transmitter.value):
     return Person(role=role, name = name, healthContext = healthContext,
                 sentimentCoefficients = coefficients)
     
-def defaultEmergency():
-    return Emergency(etype=EmergencyTypes.Normal, 
+def defaultEmergency(etype=EmergencyTypes.Normal.value):
+    return Emergency(etype=etype, 
                     num_involved=1, is_active=True)

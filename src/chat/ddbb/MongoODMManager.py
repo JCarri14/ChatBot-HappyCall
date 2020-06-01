@@ -195,9 +195,11 @@ class MongoODMManager:
             return None
 
     def get_person_from_emergency(self, persons, role):
+        print("Finding person...")
         try:
             for p in persons:
                 if p.role == role:
+                    print(p)
                     return p
             return None
         except:
@@ -415,7 +417,8 @@ class MongoODMManager:
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
             p = self.get_person_from_emergency(e.pers_involved, role)
-            for injury in injuries:
+            print(injuries)
+            for injury in injuries[0]:
                 Person.objects.raw({'_id': p._id}).update(
                     {'$addToSet': {'healthContext.injuries': injury}})
         except:

@@ -153,9 +153,17 @@ class MongoODMManager:
     def get_victims(self, emergency_id):
         try:
             e = Emergency.objects.raw({'_id': emergency_id})[0]
-            return e.pers_involved
+            return [p.name for p in e.pers_involved if p.role == Roles.Victim.value]
         except:
             print("Exception: Could not find emergency [victims]")
+            return []
+
+    def get_aggressors(self, emergency_id):
+        try:
+            e = Emergency.objects.raw({'_id': emergency_id})[0]
+            return [p for p in e.pers_involved if p.role == Roles.Aggressor.value]
+        except:
+            print("Exception: Could not find emergency [aggressors]")
             return []
 
     def get_person_moods(self, conversation_name, role):

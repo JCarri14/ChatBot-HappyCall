@@ -179,11 +179,13 @@ class ReadOnlyChatConsumer(WebsocketConsumer):
             response["witness"]["role"] = person.role       
             response["witness"]["description"] = person.description  
             response["witness"]["preferences"] = person.preferences
-            response["witness"]["dislikes"] = person.dislikes    
+            response["witness"]["dislikes"] = person.dislikes
+            response["witness"]["aggressions"] = person.healthContext.aggressions  
+            response["witness"]["injuries"] = person.healthContext.injuries         
             response["witness_sentiments"] = person.sentimentCoefficients
 
-        if conversation.emergencies[0]:
-            emergency = conversation.emergencies[0]
+        if conversation.curr_emergency:
+            emergency = conversation.curr_emergency
             response["emergency"]["type"] = emergency.etype
             response["emergency"]["location"] = emergency.location 
             response["emergency"]["pers_involved"] = emergency.num_involved 

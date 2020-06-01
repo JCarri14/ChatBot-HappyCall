@@ -96,5 +96,5 @@ def defaultPerson(name="Person", role=Roles.Transmitter.value):
                 sentimentCoefficients = coefficients)
     
 def defaultEmergency(etype=EmergencyTypes.Normal.value):
-    return Emergency(etype=etype, 
-                    num_involved=1, is_active=True)
+    return Emergency(etype=etype, num_aggressors=0, 
+                    num_victims=0, is_active=True)

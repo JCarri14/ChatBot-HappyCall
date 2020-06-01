@@ -74,6 +74,29 @@ function toCapitalCase(word) {
     return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
+function appendItemsToList(container, parent, identifier, content) {
+
+    if (Array.isArray(content)) {
+        for (v in content) {
+            if (Array.isArray(content[v])) {
+                container.appendChild(createItem(parent, toCapitalCase(identifier), content[v].join("<br>")));
+            } else {
+                container.appendChild(createItem(parent, toCapitalCase(identifier), content[v]));
+            }
+        }
+    } else {
+        container.appendChild(createItem(parent, toCapitalCase(identifier), content[v]));
+    }
+}
+
+function addListGroupItem(container, parentName, itemName, itemContent) {
+    if (Array.isArray(itemContent[itemName])) {
+        container.appendChild(createItem(parentName, toCapitalCase(itemName), itemContent[itemName].join("<br>")));
+    } else {
+        container.appendChild(createItem(parentName, toCapitalCase(itemName), itemContent[itemName]));
+    }
+}
+
 function createBlock(title, content) {
     var block = document.createElement("div");
     block.classList.add("data-block");
@@ -87,12 +110,9 @@ function createBlock(title, content) {
     list.classList.add("list-group");
 
     for (v in content) {
-        if (Array.isArray(content[v])) {
-            list.appendChild(createItem(title, toCapitalCase(v), content[v].join("<br>")));
-        } else {
-            list.appendChild(createItem(title, toCapitalCase(v), content[v]));
-        }
+        addListGroupItem(list, title, v, content[v]);
     }
+    
     block.appendChild(blockTitle);
     block.appendChild(list);
     document.querySelector(".data-box").appendChild(block);
@@ -104,16 +124,21 @@ function update_block(key, values) {
         createBlock(key, values);
         return;
     }
+
     for (v in values) {
-        if (Array.isArray(values[v])) {
-            for (i in values[v]) {
-                document.getElementById(key+"_"+v).value = '';
-                document.getElementById(key+"_"+v).innerHTML += values[v][i] + "<br>";
-            }
+        child = document.getElementById(key+"_"+v);
+        if (child == null) {
+            addListGroupItem(document.querySelector("#" + key + " .list-group"), key, v, values[v]);
         } else {
-            console.log(key);
-            document.getElementById(key+"_"+v).value = '';
-            document.getElementById(key+"_"+v).innerHTML = values[v];
+            if (Array.isArray(values[v])) {
+                for (i in values[v]) {
+                    child.innerHTML = '';
+                    child.innerHTML += values[v][i] + "<br>";
+                }
+            } else {
+                child.innerHTML = '';
+                child.innerHTML = values[v];   
+            }
         }
     }
 }

@@ -188,7 +188,8 @@ class ReadOnlyChatConsumer(WebsocketConsumer):
             emergency = conversation.curr_emergency
             response["emergency"]["type"] = emergency.etype
             response["emergency"]["location"] = emergency.location 
-            response["emergency"]["pers_involved"] = emergency.num_involved 
+            response["emergency"]["num_victims"] = emergency.num_victims
+            response["emergency"]["num_aggressors"] = emergency.num_aggressors  
             response["emergency"]["active"] = emergency.is_active
         
             if emergency.pers_involved:

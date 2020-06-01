@@ -94,13 +94,18 @@ class ProtocolController:
                 # Only creating new Emergency if in the allowed types list
                 em = re.compile("|".join(emergency_types))
                 if em.search(intent):
+                    self.instance.session['curr_emergency'] = None
                     self.instance.session['curr_emergency'] = self.instance.dbManager.insert_emergency(defaultEmergency(etype=intent))
                     self.instance.session['emergencies'].append(self.instance.session['curr_emergency'])
                     self.instance.dbManager.add_emergency(
                         self.instance.session['conversation'], 
                         self.instance.session['curr_emergency']['id']
                     )
-
+                    self.instance.dbManager.update_current_emergency(
+                        self.instance.session['conversation'], 
+                        self.instance.session['curr_emergency']['id']
+                    )
+        
     def handle_intent(self, text, info):
         switcher = {
             "ProtocolAgressionWithVictim":self.agressionWithVictim,
@@ -151,20 +156,22 @@ class ProtocolController:
         #Checking for victim name/identification
         names = checkPersonName(params) 
         if names:
+            db_victims = self.instance.dbManager.get_victims(                    
+                    self.instance.session['curr_emergency']
+                )
             persons = []
             for name in names:
-                persons.append(self.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
+                if name not in db_victims:
+                    persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
             self.instance.dbManager.update_emergency_persons(
-                self.instance.session['conversation'],
                 self.instance.session['curr_emergency'],
                 persons
             )
-            self.instance.session['victims'] = persons
         #Checking for aggressions type
         aggressions = checkAggressionType(params)
         if aggressions:
             self.instance.dbManager.update_person_aggressions(
-                    self.instance.session['conversation'],
+                    self.instance.session['curr_emergency'],
                     Roles.Victim.value,
                     aggressions
                     )  
@@ -195,15 +202,15 @@ class ProtocolController:
         #Checking for aggressors name/identification
         names = checkPersonName(params) 
         if names:
+            print("Aggressors names: ")
+            print(names)
             persons = []
             for name in names:
-                persons.append(self.dbManager.insert_person(defaultPerson(name=name, role=Roles.Aggressor.value)))
+                persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Aggressor.value)))
             self.instance.dbManager.update_emergency_persons(
-                self.instance.session['conversation'],
                 self.instance.session['curr_emergency'],
                 persons
             )
-            self.instance.session['aggressors'] = persons
         #Checking for emergency location
         locations = checkEmergencyLocationNoNumber(params)
         if locations:
@@ -218,7 +225,6 @@ class ProtocolController:
                     )
         #Checking for aggressions type
         aggressions = checkAggressionType(params)
-        print(aggressions)
         if aggressions:
             self.instance.dbManager.update_witness_aggressions(
                     self.instance.session['conversation'],
@@ -232,7 +238,6 @@ class ProtocolController:
         descriptions = checkPersonDescription(params)
         if descriptions:
             self.instance.dbManager.update_person_description(
-                self.instance.session['conversation'],
                 self.instance.session['curr_emergency'],
                 Roles.Aggressor.value,
                 descriptions
@@ -244,7 +249,6 @@ class ProtocolController:
         descriptions = checkPersonDescription(params)
         if descriptions:
             self.instance.dbManager.update_person_description(
-                self.instance.session['conversation'],
                 self.instance.session['curr_emergency'],
                 Roles.Aggressor.value,
                 descriptions
@@ -252,6 +256,11 @@ class ProtocolController:
         return result
 
     def coronavirus(self, user_input, params, result):
+        #Updating witness role as Victim
+        self.instance.dbManager.update_witness_role(
+            self.instance.session['conversation'],
+            Roles.Victim.value
+        )
         #Checking for healthProblem
         health = checkHealthProblem(params)
         if health:
@@ -267,7 +276,7 @@ class ProtocolController:
         if locations:
             for loc in locations:
                 self.instance.dbManager.add_location(
-                    self.instance.session['conversation'],
+                    self.instance.session['curr_emergency'],
                     loc
                     )
         self.restoreProtocolContext()
@@ -284,52 +293,68 @@ class ProtocolController:
         return result
 
     def bleedingBase(self, user_input, params, result):
-        #Checking for number of victims
-        if not self.instance.session['curr_emergency']['quantity_found']:
-            numPersons = checkPersonsQuantity(params)
-            if numPersons:
-                try:
-                    num = list(numPersons[0].items())
-                except:
-                    num = numPersons[0]
-                if isinstance(num, list):
-                    num = numPersons[0][0]
-                self.instance.session['curr_emergency']['quantity_found'] = True
-                self.instance.dbManager.update_emergency_num_persons(
-                    self.instance.session['curr_emergency']['id'],
-                    num
+        is_witness = checkIfWitnessProblem(user_input)
+        if is_witness:
+                #Updating witness role as Victim
+                self.instance.dbManager.update_witness_role(
+                    self.instance.session['conversation'],
+                    Roles.Victim.value
                 )
+        else:
+            #Checking for number of victims
+            if not self.instance.session['curr_emergency']['quantity_found']:
+                numPersons = checkPersonsQuantity(params)
+                if numPersons:
+                    try:
+                        num = list(numPersons[0].items())
+                    except:
+                        num = numPersons[0]
+                    if isinstance(num, list):
+                        num = numPersons[0][0]
+                    self.instance.session['curr_emergency']['quantity_found'] = True
+                    self.instance.dbManager.update_emergency_num_persons(
+                        self.instance.session['curr_emergency']['id'],
+                        num
+                    )
         #Checking for victims name/identification
         names = checkPersonName(params) 
         if names:
-            persons = []
-            for name in names:
-                persons.append(self.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
-            self.instance.dbManager.update_emergency_persons(
-                self.instance.session['conversation'],
-                self.instance.session['curr_emergency'],
-                persons
-            )
-            self.instance.session['victims'].append(persons)
+            if is_witness:
+                self.instance.dbManager.update_witness_name(
+                    self.instance.session['conversation'],
+                    names[0]
+                )
+            else:
+                db_victims = self.instance.dbManager.get_victims(                    
+                    self.instance.session['curr_emergency']
+                )
+                persons = []
+                for name in names:
+                    if name not in db_victims:
+                        persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
+                self.instance.dbManager.update_emergency_persons(
+                    self.instance.session['curr_emergency'],
+                    persons
+                )
         #Checking for emergency location
         locations = checkEmergencyLocationNoNumber(params)
         if locations:
             for loc in locations:
                 self.instance.dbManager.add_location(
-                    self.instance.session['conversation'],
+                    self.instance.session['curr_emergency'],
                     loc
                     )
         #Checking for healthProblem
         health = checkHealthProblem(params)
         if health:
-            if checkIfWitnessProblem(user_input):
+            if is_witness:
                 self.instance.dbManager.update_witness_injuries(
                     self.instance.session['conversation'],
                     health
                 )
             else:
                 self.instance.dbManager.update_person_injuries(
-                    self.instance.session['conversation'],
+                    self.instance.session['curr_emergency'],
                     Roles.Victim.value,
                     health
                 )
@@ -337,54 +362,76 @@ class ProtocolController:
         return result
     
     def criticalHealth(self, user_input, params, result):
+        is_witness = checkIfWitnessProblem(user_input)
+        if is_witness:
+                #Updating witness role as Victim
+                self.instance.dbManager.update_witness_role(
+                    self.instance.session['conversation'],
+                    Roles.Victim.value
+                )
         #Checking for healthProblem
         health = checkHealthProblem(params)
         if health:
-            if checkIfWitnessProblem(user_input):
+            if is_witness:
                 self.instance.dbManager.update_witness_injuries(
                     self.instance.session['conversation'],
                     health
                 )
             else:
                 self.instance.dbManager.update_person_injuries(
-                    self.instance.session['conversation'],
+                    self.instance.session['curr_emergency'],
                     Roles.Victim.value,
                     health
                 ) 
         return result
     
     def faintingBase(self, user_input, params, result):
+        is_witness = checkIfWitnessProblem(user_input)
+        if is_witness:
+            #Updating witness role as Victim
+            self.instance.dbManager.update_witness_role(
+                self.instance.session['conversation'],
+                Roles.Victim.value
+            )
         #Checking for victims name/identification
         names = checkPersonName(params) 
         if names:
-            persons = []
-            for name in names:
-                persons.append(self.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
-            self.instance.dbManager.update_emergency_persons(
-                self.instance.session['conversation'],
-                self.instance.session['curr_emergency'],
-                persons
-            )
-            self.instance.session['victims'].append(persons)
+            if is_witness:
+                self.instance.dbManager.update_witness_name(
+                    self.instance.session['conversation'],
+                    names[0]
+                )
+            else:
+                db_victims = self.instance.dbManager.get_victims(                    
+                    self.instance.session['curr_emergency']
+                )
+                persons = []
+                for name in names:
+                    if name not in db_victims:
+                        persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
+                self.instance.dbManager.update_emergency_persons(
+                    self.instance.session['curr_emergency'],
+                    persons
+                )
         #Checking for emergency location
         locations = checkEmergencyLocationNoNumber(params)
         if locations:
             for loc in locations:
                 self.instance.dbManager.add_location(
-                    self.instance.session['conversation'],
+                    self.instance.session['curr_emergency'],
                     loc
                     )
         #Checking for healthProblem
         health = checkHealthProblem(params)
         if health:
-            if checkIfWitnessProblem(user_input):
+            if is_witness:
                 self.instance.dbManager.update_witness_injuries(
                     self.instance.session['conversation'],
                     health
                 )
             else:
                 self.instance.dbManager.update_person_injuries(
-                    self.instance.session['conversation'],
+                    self.instance.session['curr_emergency'],
                     Roles.Victim.value,
                     health
                 ) 
@@ -392,42 +439,45 @@ class ProtocolController:
         return result
     
     def woundBase(self, user_input, params, result):
+        is_witness = checkIfWitnessProblem(user_input)
+        if is_witness:
+            #Updating witness role as Victim
+            self.instance.dbManager.update_witness_role(
+                self.instance.session['conversation'],
+                Roles.Victim.value
+            )
         #Checking for victims names/identification
         names = checkPersonName(params) 
-        if names:
-            persons = []
-            for name in names:
-                persons.append(self.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
-            self.instance.dbManager.update_emergency_persons(
+        if is_witness:
+            self.instance.dbManager.update_witness_name(
                 self.instance.session['conversation'],
-                self.instance.session['curr_emergency'],
-                persons
+                names[0]
             )
-            self.instance.session['victims'].append(persons)
-        #Checking for undefined victims names/identification
-        name = checkUndefinedPersonName(params) 
-        if names:
-            persons = []
-            for name in names:
-                persons.append(self.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
-            self.instance.dbManager.update_emergency_persons(
-                self.instance.session['conversation'],
-                self.instance.session['curr_emergency'],
-                persons
-            )
-            self.instance.session['victims'].append(persons)       
+        else:
+            if names:
+                db_victims = self.instance.dbManager.get_victims(                    
+                    self.instance.session['curr_emergency']
+                )
+                persons = []
+                for name in names:
+                    if name not in db_victims:
+                        persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
+                self.instance.dbManager.update_emergency_persons(
+                    self.instance.session['curr_emergency'],
+                    persons
+                )
         #Checking for emergency location
         locations = checkEmergencyLocation(params)
         if locations:
             for loc in locations:
                 self.instance.dbManager.add_location(
-                    self.instance.session['conversation'],
+                    self.instance.session['curr_emergency'],
                     loc
                     )
         #Checking for healthProblem
         health = checkHealthProblem(params)
         if health:
-            if checkIfWitnessProblem(user_input):
+            if is_witness:
                 self.instance.dbManager.update_witness_injuries(
                     self.instance.session['conversation'],
                     health
@@ -468,48 +518,76 @@ class ProtocolController:
         return result
 
     def victimIdentification(self, user_input, params, result):  
+        is_witness = checkIfWitnessProblem(user_input)      
         #Checking for victim's name
         names = checkPersonName(params) 
         if names:
-            persons = []
-            for name in names:
-                persons.append(self.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
-            self.instance.dbManager.update_emergency_persons(
-                self.instance.session['conversation'],
-                self.instance.session['curr_emergency'],
-                persons
-            )
-            self.instance.session['victims'] = persons
+            if is_witness:
+                self.instance.dbManager.update_witness_name(
+                    self.instance.session['conversation'],
+                    names[0]
+                )
+            else: 
+                db_victims = self.instance.dbManager.get_victims(                    
+                    self.instance.session['curr_emergency']
+                )
+                persons = []
+                for name in names:
+                    if name not in db_victims:
+                        persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
+                self.instance.dbManager.update_emergency_persons(
+                    self.instance.session['curr_emergency'],
+                    persons
+                )
         #Checking for victim description
         descriptions = checkPersonDescription(params)
         if descriptions:
-            self.instance.dbManager.update_person_description(
-                self.instance.session['conversation'],
-                self.instance.session['curr_emergency'],
-                Roles.Victim.value,
-                descriptions
-            ) 
+            if is_witness:
+                self.instance.dbManager.update_witness_description(
+                    self.instance.session['conversation'],
+                    descriptions
+                ) 
+            else:   
+                self.instance.dbManager.update_person_description(
+                    self.instance.session['curr_emergency'],
+                    Roles.Victim.value,
+                    descriptions
+                ) 
         return result
 
     def suicideAttempt(self, user_input, params, result):
+        is_witness = checkIfWitnessProblem(user_input)      
+        if is_witness:
+            #Updating witness role as Victim
+            self.instance.dbManager.update_witness_role(
+                self.instance.session['conversation'],
+                Roles.Victim.value
+            ) 
         #Checking for victims name/identification
         names = checkPersonName(params) 
         if names:
-            persons = []
-            for name in names:
-                persons.append(self.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
-            self.instance.dbManager.update_emergency_persons(
-                self.instance.session['conversation'],
-                self.instance.session['curr_emergency'],
-                persons
-            )
-            self.instance.session['victims'].append(persons)
+            if is_witness:
+                self.instance.dbManager.update_witness_name(
+                    self.instance.session['conversation'],
+                    names[0]
+                )
+            else:
+                db_victims = self.instance.dbManager.get_victims(                    
+                    self.instance.session['curr_emergency']
+                )
+                persons = []
+                for name in names:
+                    persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
+                self.instance.dbManager.update_emergency_persons(
+                    self.instance.session['curr_emergency'],
+                    persons
+                )
         #Checking for emergency location
         locations = checkEmergencyLocationNoNumber(params)
         if locations:
             for loc in locations:
                 self.instance.dbManager.add_location(
-                    self.instance.session['conversation'],
+                    self.instance.session['curr_emergency'],
                     loc
                     )
         

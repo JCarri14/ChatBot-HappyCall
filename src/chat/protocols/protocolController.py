@@ -121,6 +121,7 @@ class ProtocolController:
             "ProtocolCovid19":self.coronavirus,
             "FrasesMood":self.moodSentences,
             "GetPreferences":self.getPreferences,
+            "GetNoPreferences":self.getNoPreferences,
             "GetNombre":self.getNombre,
             "ProtocolSuicideAttempt":self.suicideAttempt,
             "ProtocolVictimIdentification":self.victimIdentification,
@@ -143,27 +144,55 @@ class ProtocolController:
         num = 0
         if not self.instance.session['curr_emergency']['quantity_found']:
             numPersons = checkPersonsQuantity(params)
+            numPersons2 = checkPersonsQuantity2(params)
             if numPersons:
                 num = numPersons[0]
                 self.instance.session['curr_emergency']['quantity_found'] = True
-                self.instance.dbManager.update_emergency_num_persons(
+                self.instance.dbManager.update_emergency_num_victims(
                     self.instance.session['curr_emergency']['id'],
                     num
                 )
+            if numPersons2:
+                num = numPersons2[0]
+                self.instance.session['curr_emergency']['quantity_found'] = True
+                self.instance.dbManager.update_emergency_num_aggressors(
+                    self.instance.session['curr_emergency']['id'],
+                    num
+            )    
         #Checking for victim name/identification
         names = checkPersonName(params) 
+        names2 = checkPersonName2(params) 
         if names:
             db_victims = self.instance.dbManager.get_victims(                    
                     self.instance.session['curr_emergency']['id']
                 )
+            db_agg = self.instance.dbManager.get_aggressors(                    
+                    self.instance.session['curr_emergency']['id']
+                )
             persons = []
             for name in names:
-                if name not in db_victims and name != "Una persona":
+                if name not in db_victims and name != "una persona":
                     persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
             self.instance.dbManager.update_emergency_persons(
                 self.instance.session['curr_emergency']['id'],
                 persons
             )
+        if names2:
+            db_victims = self.instance.dbManager.get_victims(                    
+                    self.instance.session['curr_emergency']['id']
+                )
+            db_agg = self.instance.dbManager.get_aggressors(                    
+                    self.instance.session['curr_emergency']['id']
+                )
+            persons = []
+            for name in names2:
+                if name not in db_victims and name != "una persona":
+                    persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Aggressor.value)))
+            self.instance.dbManager.update_emergency_persons(
+                self.instance.session['curr_emergency']['id'],
+                persons
+            )
+        
         #Checking for aggressions type
         aggressions = checkAggressionType(params)
         if aggressions:
@@ -187,7 +216,7 @@ class ProtocolController:
             if numPersons:
                 num = numPersons[0]
                 self.instance.session['curr_emergency']['quantity_found'] = True
-                self.instance.dbManager.update_emergency_num_persons(
+                self.instance.dbManager.update_emergency_num_aggressors(
                     self.instance.session['curr_emergency']['id'],
                     num
                 )
@@ -225,6 +254,28 @@ class ProtocolController:
         return result
 
     def agressionIdentificationWithout(self, user_input, params, result):
+        #Checking for victim name/identification
+        names = checkPersonName(params) 
+        if names:
+            db_agg = self.instance.dbManager.get_aggressors(                    
+                    self.instance.session['curr_emergency']['id']
+                )
+            persons = []
+            for name in names:
+                if name not in db_agg and name != "una persona":
+                    persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Aggressor.value)))
+            self.instance.dbManager.update_emergency_persons(
+                self.instance.session['curr_emergency']['id'],
+                persons
+            )
+        #Checking for emergency location
+        locations = checkEmergencyLocationNoNumber(params)
+        if locations:
+            for loc in locations:
+                self.instance.dbManager.add_location(
+                    self.instance.session['curr_emergency']['id'],
+                    loc
+                )
         #Checking for aggressors description
         descriptions = checkPersonDescription(params)
         if descriptions:
@@ -236,6 +287,28 @@ class ProtocolController:
         return result
     
     def agressionIdentificationWith(self, user_input, params, result):
+        #Checking for victim name/identification
+        names = checkPersonName(params) 
+        if names:
+            db_agg = self.instance.dbManager.get_aggressors(                    
+                    self.instance.session['curr_emergency']['id']
+                )
+            persons = []
+            for name in names:
+                if name not in db_agg and name != "Una persona":
+                    persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Aggressor.value)))
+            self.instance.dbManager.update_emergency_persons(
+                self.instance.session['curr_emergency']['id'],
+                persons
+            )
+        #Checking for emergency location
+        locations = checkEmergencyLocationNoNumber(params)
+        if locations:
+            for loc in locations:
+                self.instance.dbManager.add_location(
+                    self.instance.session['curr_emergency']['id'],
+                    loc
+                )
         #Checking for emergency location
         descriptions = checkPersonDescription(params)
         if descriptions:
@@ -285,25 +358,14 @@ class ProtocolController:
 
     def bleedingBase(self, user_input, params, result):
         is_witness = checkIfWitnessProblem(user_input)
-        if is_witness:
-                #Updating witness role as Victim
-                self.instance.dbManager.update_witness_role(
-                    self.instance.session['conversation'],
-                    Roles.Victim.value
-                )
-        else:
+        if not is_witness:
             #Checking for number of victims
             if not self.instance.session['curr_emergency']['quantity_found']:
                 numPersons = checkPersonsQuantity(params)
                 if numPersons:
-                    try:
-                        num = list(numPersons[0].items())
-                    except:
-                        num = numPersons[0]
-                    if isinstance(num, list):
-                        num = numPersons[0][0]
+                    num = numPersons[0]
                     self.instance.session['curr_emergency']['quantity_found'] = True
-                    self.instance.dbManager.update_emergency_num_persons(
+                    self.instance.dbManager.update_emergency_num_victims(
                         self.instance.session['curr_emergency']['id'],
                         num
                     )
@@ -490,6 +552,36 @@ class ProtocolController:
         return result
 
     def moodSentences(self, user_input, params, result):
+        is_witness = checkIfWitnessProblem(user_input)      
+        #Checking for victim's name
+        names = checkPersonName(params) 
+        if names:
+            if is_witness:
+                self.instance.dbManager.update_witness_name(
+                    self.instance.session['conversation'],
+                    names[0]
+                )
+            else: 
+                db_victims = self.instance.dbManager.get_victims(                    
+                    self.instance.session['curr_emergency']['id']
+                )
+                persons = []
+                for name in names:
+                    if name not in db_victims:
+                        persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
+                self.instance.dbManager.update_emergency_persons(
+                    self.instance.session['curr_emergency']['id'],
+                    persons
+                )
+        #Checking for emergency location
+        locations = checkEmergencyLocation(params)
+        if locations:
+            for loc in locations:
+                self.instance.dbManager.add_location(
+                    self.instance.session['curr_emergency']['id'],
+                    loc
+                )
+        
         result = self.handle_multiple_contexts(result)
         return result
     
@@ -503,6 +595,16 @@ class ProtocolController:
         result = self.handle_multiple_contexts(result)
         return result
     
+    def getNoPreferences(self, user_input, params, result):
+        prefs = checkPersonPreferences(params)
+        if (prefs):
+            self.instance.dbManager.update_witness_dislikes(
+                self.instance.session['conversation'],
+                prefs
+                )
+        result = self.handle_multiple_contexts(result)
+        return result
+   
     def getNombre(self, user_input, params, result):
         #Checking for transmitter name
         name = checkPersonName(params)
@@ -510,6 +612,15 @@ class ProtocolController:
             self.instance.dbManager.update_witness_name(
                 self.instance.session['conversation'],
                 name[0]
+                )
+        is_witness = checkIfWitnessProblem(user_input)      
+        #Checking for emergency location
+        locations = checkEmergencyLocation(params)
+        if locations:
+            for loc in locations:
+                self.instance.dbManager.add_location(
+                    self.instance.session['curr_emergency']['id'],
+                    loc
                 )
         
         result = self.handle_multiple_contexts(result)
@@ -592,9 +703,46 @@ class ProtocolController:
         return result
 
     def dangerSuicide(self, user_input, params, result):
+        #Checking for emergency location
+        locations = checkEmergencyLocation(params)
+        if locations:
+            for loc in locations:
+                self.instance.dbManager.add_location(
+                    self.instance.session['curr_emergency']['id'],
+                    loc
+                )
         return result
 
     def dangerOthers(self, user_input, params, result):
+        is_witness = checkIfWitnessProblem(user_input)      
+        #Checking for victim's name
+        names = checkPersonName(params) 
+        if names:
+            if is_witness:
+                self.instance.dbManager.update_witness_name(
+                    self.instance.session['conversation'],
+                    names[0]
+                )
+            else: 
+                db_victims = self.instance.dbManager.get_victims(                    
+                    self.instance.session['curr_emergency']['id']
+                )
+                persons = []
+                for name in names:
+                    if name not in db_victims:
+                        persons.append(self.instance.dbManager.insert_person(defaultPerson(name=name, role=Roles.Victim.value)))
+                self.instance.dbManager.update_emergency_persons(
+                    self.instance.session['curr_emergency']['id'],
+                    persons
+                )
+        #Checking for emergency location
+        locations = checkEmergencyLocation(params)
+        if locations:
+            for loc in locations:
+                self.instance.dbManager.add_location(
+                    self.instance.session['curr_emergency']['id'],
+                    loc
+                )
         return result 
 
     # Protocol Contexts functions

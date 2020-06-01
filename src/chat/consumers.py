@@ -171,7 +171,8 @@ class ReadOnlyChatConsumer(WebsocketConsumer):
             "aggressor": {}
         }
         response["conversation"]["name"] = conversation.name
-        response["conversation"]["date"] = conversation.created_at.isoformat()       
+        response["conversation"]["date"] = conversation.created_at.isoformat()
+               
         if conversation.witness:
             person = conversation.witness
             response["witness"]["name"] = person.name    

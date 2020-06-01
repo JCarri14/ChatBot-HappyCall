@@ -254,7 +254,7 @@ class MongoODMManager:
             c = Conversation.objects.raw({'name': conversation_name})[0]
             p = c.witness
             Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'description': { '$each': descriptions}}})
+                {'$push': {'description': { '$each': descriptions[0]}}})
         except:
             print("Exception: Could not update witness [description]")
     
@@ -263,7 +263,7 @@ class MongoODMManager:
             c = Conversation.objects.raw({'name': conversation_name})[0]
             p = c.witness
             Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'diseases': { '$each': diseases}}})
+                {'$push': {'diseases': { '$each': diseases[0]}}})
         except:
             print("Exception: Could not update witness [diseases]")
     
@@ -272,7 +272,7 @@ class MongoODMManager:
             c = Conversation.objects.raw({'name': conversation_name})[0]
             p = c.witness
             Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'injuries': { '$each': injuries}}})
+                {'$push': {'injuries': { '$each': injuries[0]}}})
         except:
             print("Exception: Could not update witness [injuries]")
 
@@ -281,7 +281,7 @@ class MongoODMManager:
             c = Conversation.objects.raw({'name': conversation_name})[0]
             p = c.witness
             Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'preferences': { '$each': preferences}}})
+                {'$push': {'preferences': { '$each': preferences[0]}}})
         except:
             print("Exception: Could not update witness [preferences]")
     
@@ -290,7 +290,7 @@ class MongoODMManager:
             c = Conversation.objects.raw({'name': conversation_name})[0]
             p = c.witness
             Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'dislikes': { '$each': dislikes}}})
+                {'$push': {'dislikes': { '$each': dislikes[0]}}})
         except:
             print("Exception: Could not update witness [dislikes]")
     
@@ -299,7 +299,7 @@ class MongoODMManager:
             c = Conversation.objects.raw({'name': conversation_name})[0]
             p = c.witness
             Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'healthContext.aggressions': { '$each': aggressions}}})
+                {'$push': {'healthContext.aggressions': aggressions[0]}})
         except:
             print("Exception: Could not update witness [aggressions]")
 
@@ -312,19 +312,33 @@ class MongoODMManager:
 
     def update_emergency_persons(self, emergency_id, persons_ids):
         try:
-            Emergency.objects.raw({'_id': emergency_id}).update(
-                {'$push': {'pers_involved': { '$each': persons_ids}}})
+            for pId in persons_ids:
+                Emergency.objects.raw({'_id': emergency_id}).update(
+                    {'$addToSet': {'pers_involved': pId}})
         except:
             print("Exception: Could not update emergency [persons]")
     
-    def update_emergency_num_persons(self, emergency_id, num):
+    def update_emergency_num_victims(self, emergency_id, num):
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
             if not e.num_involved:
                 e.num_involved = 0
-            e.num_involved += num
+            print("Numero: ", num)
+            e.num_involved += int(num)
             Emergency.objects.raw({"_id": e._id}).update(
-                        {'$set': {'num_involved': e.num_involved}}) 
+                        {'$set': {'num_victims': e.num_involved}}) 
+        except:
+            print("Exception: Could not update emergency [num_involved]")
+
+    def update_emergency_num_aggressors(self, emergency_id, num):
+        try:
+            e = Emergency.objects.raw({"_id": emergency_id})[0]
+            if not e.num_involved:
+                e.num_involved = 0
+            print("Numero: ", num)
+            e.num_involved += int(num)
+            Emergency.objects.raw({"_id": e._id}).update(
+                        {'$set': {'num_aggressors': e.num_involved}}) 
         except:
             print("Exception: Could not update emergency [num_involved]")
 
@@ -332,8 +346,9 @@ class MongoODMManager:
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
             p = self.get_person_from_emergency(e.pers_involved, role)
-            Person.objects.raw({"_id": p._id}).update(
-                {'$set': {'healthContext.disorders': moods}})
+            for m in moods:
+                Person.objects.raw({"_id": p._id}).update(
+                    {'$addToSet': {'healthContext.disorders': m}})
         except:
             print("Exception: Could not update person [moods]")       
     
@@ -350,8 +365,9 @@ class MongoODMManager:
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
             p = self.get_person_from_emergency(e.pers_involved, role)
-            Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'description': { '$each': descriptions}}})
+            for d in descriptions:
+                Person.objects.raw({'_id': p._id}).update(
+                    {'$addToSet': {'description': d}})
         except:
             print("Exception: Could not update person [description]")
     
@@ -359,8 +375,9 @@ class MongoODMManager:
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
             p = self.get_person_from_emergency(e.pers_involved, role)
-            Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'preferences': { '$each': preferences}}})
+            for p in preferences:
+                Person.objects.raw({'_id': p._id}).update(
+                    {'$addToSet': {'preferences': p}})
         except:
             print("Exception: Could not update person [preferences]")
     
@@ -368,8 +385,9 @@ class MongoODMManager:
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
             p = self.get_person_from_emergency(e.pers_involved, role)
-            Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'dislikes': { '$each': dislikes}}})
+            for d in dislikes:
+                Person.objects.raw({'_id': p._id}).update(
+                    {'$addToSet': {'dislikes': d}})
         except:
             print("Exception: Could not update person [dislikes]")
     
@@ -377,8 +395,9 @@ class MongoODMManager:
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
             p = self.get_person_from_emergency(e.pers_involved, role)
-            Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'healthContext.aggressions': { '$each': aggressions}}})
+            for agg in aggressions:
+                Person.objects.raw({'_id': p._id}).update(
+                    {'$addToSet': {'healthContext.aggressions': agg}})
         except:
             print("Exception: Could not update person [aggressions]") 
 
@@ -386,8 +405,9 @@ class MongoODMManager:
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
             p = self.get_person_from_emergency(e.pers_involved, role)
-            Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'healthContext.disorders': { '$each': disorders}}})
+            for d in disorders:
+                Person.objects.raw({'_id': p._id}).update(
+                    {'$addToSet': {'healthContext.disorders': d}})
         except:
             print("Exception: Could not update person [disorders]")
 
@@ -395,8 +415,9 @@ class MongoODMManager:
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
             p = self.get_person_from_emergency(e.pers_involved, role)
-            Person.objects.raw({'_id': p._id}).update(
-                {'$push': {'healthContext.injuries': { '$each': injuries}}})
+            for injury in injuries:
+                Person.objects.raw({'_id': p._id}).update(
+                    {'$addToSet': {'healthContext.injuries': injury}})
         except:
             print("Exception: Could not update person [injuries]")        
 

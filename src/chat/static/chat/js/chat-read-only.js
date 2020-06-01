@@ -90,10 +90,13 @@ function appendItemsToList(container, parent, identifier, content) {
 }
 
 function addListGroupItem(container, parentName, itemName, itemContent) {
-    if (Array.isArray(itemContent[itemName])) {
-        container.appendChild(createItem(parentName, toCapitalCase(itemName), itemContent[itemName].join("<br>")));
-    } else {
-        container.appendChild(createItem(parentName, toCapitalCase(itemName), itemContent[itemName]));
+    if (itemContent != null) {
+        console.log(itemContent[itemName])
+        if (Array.isArray(itemContent[itemName])) {
+            container.appendChild(createItem(parentName, toCapitalCase(itemName), itemContent[itemName].join("<br>")));
+        } else {
+            container.appendChild(createItem(parentName, toCapitalCase(itemName), itemContent[itemName]));
+        }
     }
 }
 

@@ -120,7 +120,6 @@ def calcularConditionalProbability(listKeys, probs, sentiment):
 """
 
 def calculateSentiment(dbManager, conversation_name, moods, person):
-    print(moods)
     coefficients = dbManager.get_witness_coefficients(conversation_name)
     probs = {i: moods[i]/moods["counter"] for i in moods if i != "counter"}
     

@@ -45,6 +45,7 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.20
 PyHamcrest==2.0.2
+PyJWT==1.7.1
 pymodm==0.4.3
 pymongo==3.10.1
 pyOpenSSL==19.1.0

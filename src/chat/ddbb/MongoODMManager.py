@@ -20,7 +20,7 @@ class MongoODMManager:
     
     def insert_emergency(self, emergency):
         e = emergency.save()
-        return {"id": e._id, "type": e.etype, "quantity_found": False}
+        return {"id": e._id, "type": e.etype, "victims_found": False, "aggressors_found": False}
     
     def insert_person(self, person):
         p = person.save()
@@ -150,13 +150,29 @@ class MongoODMManager:
             print("Exception: Could not find emergency by type")
             return None
 
+    def get_num_victims(self, emergency_id):
+        try:
+            e = Emergency.objects.raw({'_id': emergency_id})[0]
+            return e.num_victims
+        except:
+            print("Exception: Could not find emergency [num victims]")
+            return None
+    
+    def get_num_aggressors(self, emergency_id):
+        try:
+            e = Emergency.objects.raw({'_id': emergency_id})[0]
+            return e.num_aggressors
+        except:
+            print("Exception: Could not find emergency [num aggressors]")
+            return None
+
     def get_victims(self, emergency_id):
         try:
             e = Emergency.objects.raw({'_id': emergency_id})[0]
             return [p.name for p in e.pers_involved if p.role == Roles.Victim.value]
         except:
             print("Exception: Could not find emergency [victims]")
-            return []
+            return None
 
     def get_aggressors(self, emergency_id):
         try:
@@ -165,6 +181,22 @@ class MongoODMManager:
         except:
             print("Exception: Could not find emergency [aggressors]")
             return []
+
+    def get_aggressor_name(self, emergency_id):
+        try:
+            e = Emergency.objects.raw({'_id': emergency_id})[0]
+            return [p.name for p in e.pers_involved if p.role == Roles.Aggressor.value][0]
+        except:
+            print("Exception: Could not find emergency [aggressors]")
+            return None
+    
+    def get_victim_name(self, emergency_id):
+        try:
+            e = Emergency.objects.raw({'_id': emergency_id})[0]
+            return [p.name for p in e.pers_involved if p.role == Roles.Victim.value][0]
+        except:
+            print("Exception: Could not find emergency [aggressors]")
+            return None
 
     def get_person_moods(self, conversation_name, role):
         try:
@@ -195,7 +227,6 @@ class MongoODMManager:
             return None
 
     def get_person_from_emergency(self, persons, role):
-        print("Finding person...")
         try:
             for p in persons:
                 if p.role == role:
@@ -323,26 +354,31 @@ class MongoODMManager:
     def update_emergency_num_victims(self, emergency_id, num):
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
-            if not e.num_involved:
-                e.num_involved = 0
-            print("Numero: ", num)
-            e.num_involved += int(num)
+            if not e.num_victims:
+                e.num_victims = 0
+            print("NumVictims: ", num)
+            new_num = e.num_victims + int(num)
             Emergency.objects.raw({"_id": e._id}).update(
-                        {'$set': {'num_victims': e.num_involved}}) 
+                        {'$set': {'num_victims': new_num}})
+            return True    
         except:
-            print("Exception: Could not update emergency [num_involved]")
+            print("Exception: Could not update emergency [num_victims]")
+            return False
 
     def update_emergency_num_aggressors(self, emergency_id, num):
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
-            if not e.num_involved:
-                e.num_involved = 0
-            print("Numero: ", num)
-            e.num_involved += int(num)
+            if not e.num_aggressors:
+                e.num_aggressors = 0
+            print("Num in Aggressors: ", int(num))
+            new_num = e.num_aggressors + int(num)
             Emergency.objects.raw({"_id": e._id}).update(
-                        {'$set': {'num_aggressors': e.num_involved}}) 
+                        {'$set': {'num_aggressors': new_num}})
+            return True
+            
         except:
-            print("Exception: Could not update emergency [num_involved]")
+            print("Exception: Could not update emergency [num_aggressors]")
+            return False
 
     def update_person_moods(self, emergency_id, role, moods):
         try:
@@ -417,7 +453,7 @@ class MongoODMManager:
         try:
             e = Emergency.objects.raw({"_id": emergency_id})[0]
             p = self.get_person_from_emergency(e.pers_involved, role)
-            print(injuries)
+            
             for injury in injuries[0]:
                 Person.objects.raw({'_id': p._id}).update(
                     {'$addToSet': {'healthContext.injuries': injury}})

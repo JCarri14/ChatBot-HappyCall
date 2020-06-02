@@ -43,7 +43,7 @@ def loopDictParameters(result, search, params):
 
     for items in params:
         for key, value in items.items():
-            if key in search:
+            if expr.match(key):
                 if isinstance(value, list):
                     if len(value) > 0:
                         result.append(value)
@@ -88,7 +88,6 @@ def defaultPerson(name="Person", role=Roles.Transmitter.value):
     for m in (Moods):
         disorders[m.value] = 0
     healthContext = HealthContext(disorders=disorders)
-    print("Disorders: ", disorders)
     coefficients = {}
     for c in (Coefficients):
         coefficients[c.value] = 0.0
